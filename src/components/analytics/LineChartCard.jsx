@@ -1,4 +1,4 @@
-import React from 'react';
+import { useMemo } from 'react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { getConversionByMonth } from '../../utils/analyticsHelpers';
 
@@ -21,7 +21,7 @@ import { getConversionByMonth } from '../../utils/analyticsHelpers';
  * @param {LineChartCardProps} props
  */
 const LineChartCard = ({ leads }) => {
-  const chartData = getConversionByMonth(leads);
+  const chartData = useMemo(() => getConversionByMonth(leads), [leads]);
 
   return (
     <div className="p-6 bg-white dark:bg-card-dark border border-slate-200 dark:border-border-dark rounded-xl shadow-xs flex flex-col justify-between">

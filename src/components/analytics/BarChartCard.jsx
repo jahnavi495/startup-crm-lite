@@ -1,4 +1,4 @@
-import React from 'react';
+import { useMemo } from 'react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { getMonthlyLeads } from '../../utils/analyticsHelpers';
 
@@ -20,7 +20,7 @@ import { getMonthlyLeads } from '../../utils/analyticsHelpers';
  * @param {BarChartCardProps} props
  */
 const BarChartCard = ({ leads }) => {
-  const chartData = getMonthlyLeads(leads);
+  const chartData = useMemo(() => getMonthlyLeads(leads), [leads]);
 
   return (
     <div className="p-6 bg-white dark:bg-card-dark border border-slate-200 dark:border-border-dark rounded-xl shadow-xs flex flex-col justify-between">

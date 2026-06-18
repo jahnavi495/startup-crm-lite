@@ -1,4 +1,4 @@
-import React from 'react';
+import { useMemo } from 'react';
 import StatusBadge from '../leads/StatusBadge';
 
 /**
@@ -24,9 +24,11 @@ import StatusBadge from '../leads/StatusBadge';
  */
 const RecentLeads = ({ leads }) => {
   // Sort by calendar date in descending order and extract the top 5 records
-  const recentLeads = [...leads]
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 5);
+  const recentLeads = useMemo(() => {
+    return [...leads]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 5);
+  }, [leads]);
 
   return (
     <div className="p-5 bg-white dark:bg-card-dark border border-slate-200 dark:border-border-dark rounded-xl shadow-xs">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useLeads } from '../context/LeadContext';
 import { Users, DollarSign, Percent, TrendingUp } from 'lucide-react';
 import StatsCard from '../components/dashboard/StatsCard';
@@ -22,30 +22,37 @@ const Dashboard = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // Helper formatting for currency strings
-  const formatCurrency = (val) => {
+  const formatCurrency = useCallback((val) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       maximumFractionDigits: 0
     }).format(val);
-  };
+  }, []);
 
   // 1. Calculate stats dynamically from context leads database
   const totalLeads = leads.length;
   
-  const pipelineValue = leads
-    .filter((l) => l.status !== 'Lost')
-    .reduce((sum, l) => sum + l.value, 0);
+  const pipelineValue = useMemo(() => {
+    return leads
+      .filter((l) => l.status !== 'Lost')
+      .reduce((sum, l) => sum + l.value, 0);
+  }, [leads]);
 
-  const wonLeads = leads.filter((l) => l.status === 'Won');
-  const lostLeads = leads.filter((l) => l.status === 'Lost');
-  const closedLeads = wonLeads.length + lostLeads.length;
+  const wonLeads = useMemo(() => leads.filter((l) => l.status === 'Won'), [leads]);
+  const lostLeads = useMemo(() => leads.filter((l) => l.status === 'Lost'), [leads]);
+  
+  const closedLeadsCount = useMemo(() => wonLeads.length + lostLeads.length, [wonLeads, lostLeads]);
 
-  const winRate = closedLeads > 0 
-    ? Math.round((wonLeads.length / closedLeads) * 100) 
-    : 0;
+  const winRate = useMemo(() => {
+    return closedLeadsCount > 0 
+      ? Math.round((wonLeads.length / closedLeadsCount) * 100) 
+      : 0;
+  }, [closedLeadsCount, wonLeads.length]);
 
-  const closedWonRevenue = wonLeads.reduce((sum, l) => sum + l.value, 0);
+  const closedWonRevenue = useMemo(() => {
+    return wonLeads.reduce((sum, l) => sum + l.value, 0);
+  }, [wonLeads]);
 
   return (
     <div className="space-y-6">

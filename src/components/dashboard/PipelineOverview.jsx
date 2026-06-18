@@ -1,4 +1,17 @@
-import React from 'react';
+import { useMemo } from 'react';
+
+// Static constants lifted outside of the render cycle
+const STAGES = ['New', 'Contacted', 'Meeting Scheduled', 'Proposal Sent', 'Won', 'Lost'];
+
+// Tailwind BG color variants for horizontal segment bar
+const STAGE_COLORS = {
+  'New': 'bg-slate-400 dark:bg-slate-500',
+  'Contacted': 'bg-warning',
+  'Meeting Scheduled': 'bg-indigo-500',
+  'Proposal Sent': 'bg-primary',
+  'Won': 'bg-success',
+  'Lost': 'bg-danger'
+};
 
 /**
  * @typedef {Object} Lead
@@ -22,32 +35,22 @@ import React from 'react';
  * @param {PipelineOverviewProps} props
  */
 const PipelineOverview = ({ leads }) => {
-  const stages = ['New', 'Contacted', 'Meeting Scheduled', 'Proposal Sent', 'Won', 'Lost'];
-  
-  // Tailwind BG color variants for horizontal segment bar
-  const stageColors = {
-    'New': 'bg-slate-400 dark:bg-slate-500',
-    'Contacted': 'bg-warning',
-    'Meeting Scheduled': 'bg-indigo-500',
-    'Proposal Sent': 'bg-primary',
-    'Won': 'bg-success',
-    'Lost': 'bg-danger'
-  };
-
   const totalLeads = leads.length;
 
   // Aggregate stats across all stages
-  const stageStats = stages.map((stage) => {
-    const stageLeads = leads.filter((l) => l.status === stage);
-    const value = stageLeads.reduce((sum, l) => sum + l.value, 0);
-    const percentage = totalLeads > 0 ? (stageLeads.length / totalLeads) * 100 : 0;
-    return {
-      name: stage,
-      count: stageLeads.length,
-      value,
-      percentage
-    };
-  });
+  const stageStats = useMemo(() => {
+    return STAGES.map((stage) => {
+      const stageLeads = leads.filter((l) => l.status === stage);
+      const value = stageLeads.reduce((sum, l) => sum + l.value, 0);
+      const percentage = totalLeads > 0 ? (stageLeads.length / totalLeads) * 100 : 0;
+      return {
+        name: stage,
+        count: stageLeads.length,
+        value,
+        percentage
+      };
+    });
+  }, [leads, totalLeads]);
 
   // Formatting utility for currency
   const formatCurrency = (val) => {
@@ -77,7 +80,7 @@ const PipelineOverview = ({ leads }) => {
                 <div
                   key={stat.name}
                   style={{ width: `${stat.percentage}%` }}
-                  className={`${stageColors[stat.name]} h-full transition-opacity duration-150 hover:opacity-90`}
+                  className={`${STAGE_COLORS[stat.name]} h-full transition-opacity duration-150 hover:opacity-90`}
                   title={`${stat.name}: ${stat.count} leads (${Math.round(stat.percentage)}%)`}
                 />
               );
@@ -90,7 +93,7 @@ const PipelineOverview = ({ leads }) => {
               return (
                 <div key={stat.name} className="space-y-1">
                   <div className="flex items-center gap-1.5 text-xs font-semibold">
-                    <span className={`w-2 h-2 rounded-full ${stageColors[stat.name]}`} />
+                    <span className={`w-2 h-2 rounded-full ${STAGE_COLORS[stat.name]}`} />
                     <span className="text-slate-700 dark:text-slate-350 truncate">{stat.name}</span>
                   </div>
                   <p className="text-xs font-bold text-slate-900 dark:text-white pl-3.5">

@@ -1,4 +1,4 @@
-import React from 'react';
+import { useMemo } from 'react';
 import { useLeads } from '../context/LeadContext';
 import PieChartCard from '../components/analytics/PieChartCard';
 import BarChartCard from '../components/analytics/BarChartCard';
@@ -22,19 +22,24 @@ const Analytics = () => {
   // Summary Metrics calculations
   const totalLeads = leads.length;
 
-  const wonLeadsCount = leads.filter((l) => l.status === 'Won').length;
-  const lostLeadsCount = leads.filter((l) => l.status === 'Lost').length;
-  const closedLeadsCount = wonLeadsCount + lostLeadsCount;
+  const wonLeadsCount = useMemo(() => leads.filter((l) => l.status === 'Won').length, [leads]);
+  const lostLeadsCount = useMemo(() => leads.filter((l) => l.status === 'Lost').length, [leads]);
+  
+  const closedLeadsCount = useMemo(() => wonLeadsCount + lostLeadsCount, [wonLeadsCount, lostLeadsCount]);
 
   // Win Close ratio percentage Won / (Won + Lost)
-  const winRate = closedLeadsCount > 0 
-    ? Math.round((wonLeadsCount / closedLeadsCount) * 100) 
-    : 0;
+  const winRate = useMemo(() => {
+    return closedLeadsCount > 0 
+      ? Math.round((wonLeadsCount / closedLeadsCount) * 100) 
+      : 0;
+  }, [closedLeadsCount, wonLeadsCount]);
 
   // Simulated average sales cycle days based on opportunity value
-  const avgTimeToClose = totalLeads > 0 
-    ? `${Math.round(14 + (totalLeads % 5))} Days` 
-    : '0 Days';
+  const avgTimeToClose = useMemo(() => {
+    return totalLeads > 0 
+      ? `${Math.round(14 + (totalLeads % 5))} Days` 
+      : '0 Days';
+  }, [totalLeads]);
 
   return (
     <div className="space-y-6">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useLeads } from '../context/LeadContext';
 import SearchBar from '../components/common/SearchBar';
 import FilterBar from '../components/common/FilterBar';
@@ -31,34 +31,36 @@ const Leads = () => {
   const [selectedLead, setSelectedLead] = useState(null);
 
   // Derived filtered leads collection based on search keywords and status clicks
-  const filteredLeads = leads
-    .filter((lead) => activeFilter === 'All' || lead.status === activeFilter)
-    .filter((lead) =>
-      lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lead.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lead.email.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+  const filteredLeads = useMemo(() => {
+    return leads
+      .filter((lead) => activeFilter === 'All' || lead.status === activeFilter)
+      .filter((lead) =>
+        lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        lead.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        lead.email.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+  }, [leads, activeFilter, searchQuery]);
 
   // Triggered when clicking + Add Lead
-  const handleOpenAddModal = () => {
+  const handleOpenAddModal = useCallback(() => {
     setSelectedLead(null);
     setIsModalOpen(true);
-  };
+  }, []);
 
   // Triggered when clicking inline Edit button
-  const handleOpenEditModal = (lead) => {
+  const handleOpenEditModal = useCallback((lead) => {
     setSelectedLead(lead);
     setIsModalOpen(true);
-  };
+  }, []);
 
   // Closes form sheet and flushes selection memory
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
     setSelectedLead(null);
-  };
+  }, []);
 
   // Handles form submit (Creation or Updating)
-  const handleFormSubmit = (data) => {
+  const handleFormSubmit = useCallback((data) => {
     if (selectedLead) {
       // Update action
       updateLead(selectedLead.id, data);
@@ -83,10 +85,10 @@ const Leads = () => {
       });
     }
     handleCloseModal();
-  };
+  }, [selectedLead, updateLead, addLead, handleCloseModal]);
 
   // Handles record deletion trigger
-  const handleDeleteLead = (id) => {
+  const handleDeleteLead = useCallback((id) => {
     const deletedObj = deleteLead(id);
     if (deletedObj) {
       toast.error(`Removed lead record: "${deletedObj.name}"`, {
@@ -98,13 +100,13 @@ const Leads = () => {
         duration: 3000,
       });
     }
-  };
+  }, [deleteLead]);
 
   // Reset filters helper
-  const handleResetFilters = () => {
+  const handleResetFilters = useCallback(() => {
     setSearchQuery('');
     setActiveFilter('All');
-  };
+  }, []);
 
   return (
     <div className="space-y-6">

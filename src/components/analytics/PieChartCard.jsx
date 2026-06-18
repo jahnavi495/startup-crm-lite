@@ -1,6 +1,16 @@
-import React from 'react';
+import { useMemo } from 'react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { getStatusDistribution } from '../../utils/analyticsHelpers';
+
+// Visual color codes for each pipeline stage as requested in specifications
+const COLOR_MAP = {
+  'New': '#94A3B8',
+  'Contacted': '#2563EB',
+  'Meeting Scheduled': '#F59E0B',
+  'Proposal Sent': '#7C3AED',
+  'Won': '#22C55E',
+  'Lost': '#EF4444'
+};
 
 /**
  * @typedef {Object} Lead
@@ -17,22 +27,10 @@ import { getStatusDistribution } from '../../utils/analyticsHelpers';
  * PieChartCard Component
  * Displays a Recharts Pie chart illustrating the proportion of opportunities in each pipeline status.
  * Underneath, renders a detailed color-coded legend showing lead counts and percentage shares.
- * 
- * @param {PieChartCardProps} props
  */
 const PieChartCard = ({ leads }) => {
-  const chartData = getStatusDistribution(leads);
+  const chartData = useMemo(() => getStatusDistribution(leads), [leads]);
   const totalLeads = leads.length;
-
-  // Visual color codes for each pipeline stage as requested in specifications
-  const COLOR_MAP = {
-    'New': '#94A3B8',
-    'Contacted': '#2563EB',
-    'Meeting Scheduled': '#F59E0B',
-    'Proposal Sent': '#7C3AED',
-    'Won': '#22C55E',
-    'Lost': '#EF4444'
-  };
 
   return (
     <div className="p-6 bg-white dark:bg-card-dark border border-slate-200 dark:border-border-dark rounded-xl shadow-xs flex flex-col justify-between">
