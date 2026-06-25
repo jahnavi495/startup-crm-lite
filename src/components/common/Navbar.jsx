@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import { Bell, Menu, Plus } from 'lucide-react';
+import { Bell, Plus } from 'lucide-react';
 import DarkModeToggle from './DarkModeToggle';
 
 /**
@@ -16,7 +16,7 @@ import DarkModeToggle from './DarkModeToggle';
  * 
  * @param {NavbarProps} props
  */
-const Navbar = ({ toggleSidebar, onOpenAddLead }) => {
+const Navbar = ({ onOpenAddLead }) => {
   const location = useLocation();
 
   // Resolve active page titles based on pathnames
@@ -36,17 +36,8 @@ const Navbar = ({ toggleSidebar, onOpenAddLead }) => {
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between h-16 px-4 bg-white border-b border-slate-200 dark:bg-card-dark dark:border-border-dark transition-colors duration-200 md:px-6">
 
-      {/* Left Area: Mobile Menu Hamburger Trigger + Dynamic Page Title */}
+      {/* Left Area: Dynamic Page Title */}
       <div className="flex items-center gap-3">
-        <button
-          type="button"
-          className="p-2 -ml-2 rounded-lg md:hidden hover:bg-slate-100 dark:hover:bg-hover-dark text-slate-500 dark:text-slate-400 focus:outline-hidden"
-          onClick={toggleSidebar}
-          aria-label="Open navigation drawer"
-        >
-          <Menu size={20} />
-        </button>
-
         <h1 className="text-base font-bold tracking-tight text-slate-900 dark:text-white sm:text-lg md:text-xl">
           {getPageTitle()}
         </h1>

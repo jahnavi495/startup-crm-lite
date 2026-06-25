@@ -1,7 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLeads } from '../../context/LeadContext';
-import { Plus, Users, Download, ArrowRight } from 'lucide-react';
+import { Plus, Users, Download, ChevronRight } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 /**
  * @typedef {Object} QuickActionsProps
@@ -10,10 +11,7 @@ import { Plus, Users, Download, ArrowRight } from 'lucide-react';
 
 /**
  * QuickActions Component
- * Renders quick buttons for key CRM workflows:
- * 1. Register a new lead (triggers layout modal dialog)
- * 2. Navigate to the leads table view
- * 3. Export all lead entries to a download-ready CSV file.
+ * Renders quick buttons for key CRM workflows in a premium vertical list.
  * 
  * @param {QuickActionsProps} props
  */
@@ -23,7 +21,17 @@ const QuickActions = ({ onAddLeadClick }) => {
 
   // Downloads leads database as a spreadsheet-compatible CSV file in the browser
   const handleExportCSV = () => {
-    if (!leads || leads.length === 0) return;
+    if (!leads || leads.length === 0) {
+      toast.error('No leads available to export', {
+        style: {
+          background: '#EF4444',
+          color: '#FFFFFF',
+          fontWeight: 'bold',
+        },
+        duration: 3000,
+      });
+      return;
+    }
     
     // Headers layout array
     const csvHeaders = ['ID', 'Name', 'Company', 'Email', 'Phone', 'Value (USD)', 'Status', 'Source', 'Date Created'];
@@ -61,72 +69,96 @@ const QuickActions = ({ onAddLeadClick }) => {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+
+    // Show success toast notification
+    toast.success(`Successfully exported ${leads.length} leads to CSV`, {
+      style: {
+        background: '#22C55E',
+        color: '#FFFFFF',
+        fontWeight: 'bold',
+      },
+      duration: 3000,
+    });
   };
 
   return (
-    <div className="p-5 bg-white dark:bg-card-dark border border-slate-200 dark:border-border-dark rounded-xl shadow-xs">
-      <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-        Quick Actions
-      </h3>
-      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-5">
-        Accelerate standard lead workflows with one-click routines.
-      </p>
+    <div className="p-6 bg-white dark:bg-card-dark border border-slate-200 dark:border-border-dark rounded-2xl shadow-sm hover:shadow-md transition-all duration-205 flex flex-col justify-between">
+      <div>
+        <h3 className="text-sm sm:text-base font-bold text-slate-905 dark:text-white">
+          Quick Actions
+        </h3>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-5">
+          Accelerate standard lead workflows with one-click routines.
+        </p>
+      </div>
 
-      {/* Grid of actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* Vertical list of actions */}
+      <div className="flex flex-col gap-3">
         
         {/* Action 1: Add New Lead */}
         <button
           type="button"
           onClick={onAddLeadClick}
-          className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-950/20 hover:bg-blue-100 dark:hover:bg-blue-950/40 text-blue-800 dark:text-blue-300 rounded-xl cursor-pointer transition-all border border-blue-100/50 dark:border-blue-900/30 group focus:outline-hidden"
+          className="flex items-center justify-between p-4 bg-blue-50/40 dark:bg-blue-950/10 hover:bg-blue-100/60 dark:hover:bg-blue-950/20 text-blue-855 dark:text-blue-300 rounded-xl cursor-pointer transition-all duration-150 border border-blue-100/50 dark:border-blue-900/20 focus:outline-hidden hover:translate-x-0.5 group w-full text-left"
         >
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary text-white shadow-xs">
+            <div className="p-2.5 rounded-xl bg-primary text-white shadow-xs group-hover:scale-105 transition-transform duration-200">
               <Plus size={16} />
             </div>
-            <div className="text-left">
-              <p className="text-xs font-bold">Add New Lead</p>
-              <p className="text-[10px] text-blue-600/80 dark:text-blue-400/80 mt-0.5">Register a contact</p>
+            <div>
+              <p className="text-xs font-extrabold text-slate-900 dark:text-white group-hover:text-primary transition-colors">
+                Add New Lead
+              </p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                Register a new opportunity contact
+              </p>
             </div>
           </div>
-          <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 translate-x-[-4px] group-hover:translate-x-0 transition-all duration-150" />
+          <ChevronRight size={14} className="text-slate-400 group-hover:translate-x-0.5 transition-transform duration-155 shrink-0" />
         </button>
 
         {/* Action 2: View Leads list */}
         <button
           type="button"
           onClick={() => navigate('/leads')}
-          className="flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-950/20 hover:bg-emerald-100 dark:hover:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 rounded-xl cursor-pointer transition-all border border-emerald-100/50 dark:border-emerald-900/30 group focus:outline-hidden"
+          className="flex items-center justify-between p-4 bg-emerald-50/40 dark:bg-emerald-950/10 hover:bg-emerald-100/60 dark:hover:bg-emerald-950/20 text-emerald-855 dark:text-emerald-300 rounded-xl cursor-pointer transition-all duration-155 border border-emerald-100/50 dark:border-emerald-900/20 focus:outline-hidden hover:translate-x-0.5 group w-full text-left"
         >
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-success text-white shadow-xs">
+            <div className="p-2.5 rounded-xl bg-success text-white shadow-xs group-hover:scale-105 transition-transform duration-200">
               <Users size={16} />
             </div>
-            <div className="text-left">
-              <p className="text-xs font-bold">View Leads Directory</p>
-              <p className="text-[10px] text-emerald-600/80 dark:text-emerald-400/80 mt-0.5">Manage pipeline rows</p>
+            <div>
+              <p className="text-xs font-extrabold text-slate-900 dark:text-white group-hover:text-success transition-colors">
+                View Directory
+              </p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                Manage your sales pipeline rows
+              </p>
             </div>
           </div>
-          <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 translate-x-[-4px] group-hover:translate-x-0 transition-all duration-150" />
+          <ChevronRight size={14} className="text-slate-400 group-hover:translate-x-0.5 transition-transform duration-155 shrink-0" />
         </button>
 
         {/* Action 3: Export CSV spreadsheet */}
         <button
           type="button"
           onClick={handleExportCSV}
-          className="flex items-center justify-between p-4 bg-amber-50 dark:bg-amber-950/20 hover:bg-amber-100 dark:hover:bg-amber-950/40 text-amber-800 dark:text-amber-300 rounded-xl cursor-pointer transition-all border border-amber-100/50 dark:border-amber-900/30 group focus:outline-hidden"
+          className="flex items-center justify-between p-4 bg-amber-50/40 dark:bg-amber-950/10 hover:bg-amber-100/60 dark:hover:bg-amber-950/20 text-amber-855 dark:text-amber-300 rounded-xl cursor-pointer transition-all duration-155 border border-amber-100/50 dark:border-amber-900/20 focus:outline-hidden hover:translate-x-0.5 group w-full text-left"
         >
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-warning text-white shadow-xs">
+            <div className="p-2.5 rounded-xl bg-warning text-white shadow-xs group-hover:scale-105 transition-transform duration-200">
               <Download size={16} />
             </div>
-            <div className="text-left">
-              <p className="text-xs font-bold">Export Pipeline Data</p>
-              <p className="text-[10px] text-amber-600/80 dark:text-amber-400/80 mt-0.5">Download CSV tables</p>
+            <div>
+              <p className="text-xs font-extrabold text-slate-900 dark:text-white group-hover:text-warning transition-colors">
+                Export Data
+              </p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                Download database as CSV file
+              </p>
             </div>
           </div>
-          <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 translate-x-[-4px] group-hover:translate-x-0 transition-all duration-150" />
+          <ChevronRight size={14} className="text-slate-400 group-hover:translate-x-0.5 transition-transform duration-155 shrink-0" />
         </button>
 
       </div>

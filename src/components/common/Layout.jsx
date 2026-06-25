@@ -1,9 +1,11 @@
+
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Users, BarChart3 } from 'lucide-react';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import AddLeadModal from '../leads/AddLeadModal';
+import useLocalStorage from '../../hooks/useLocalStorage';
 
 /**
  * Layout Component
@@ -19,12 +21,16 @@ import AddLeadModal from '../leads/AddLeadModal';
 const Layout = ({ children }) => {
   // Mobile sidebar drawer display toggle state
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  
+
+  // Persisted desktop sidebar collapse state
+  const [isCollapsed, setIsCollapsed] = useLocalStorage('sidebar-collapsed', false);
+
   // Add Lead modal toggle state
   const [isAddLeadOpen, setIsAddLeadOpen] = useState(false);
 
   // Toggle handlers
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+  const toggleCollapse = () => setIsCollapsed((prev) => !prev);
   const openAddLeadModal = () => setIsAddLeadOpen(true);
   const closeAddLeadModal = () => setIsAddLeadOpen(false);
 
@@ -37,16 +43,21 @@ const Layout = ({ children }) => {
 
   return (
     <div className="min-h-screen flex bg-bg dark:bg-brand-dark transition-colors duration-200">
-      
+
       {/* 1. Left Sidebar (tablet + desktop) */}
-      <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+      <Sidebar
+        isOpen={isSidebarOpen}
+        toggleSidebar={toggleSidebar}
+        isCollapsed={isCollapsed}
+        toggleCollapse={toggleCollapse}
+      />
 
       {/* 2. Main Page Container */}
-      <div className="flex-1 flex flex-col md:pl-20 lg:pl-64 min-w-0 pb-16 md:pb-0">
-        
+      <div className={`flex-1 flex flex-col min-w-0 pb-16 md:pb-0 transition-all duration-250 ease-in-out ${isCollapsed ? 'md:pl-20 lg:pl-20' : 'md:pl-20 lg:pl-64'
+        }`}>
+
         {/* Top Header Navigation Toolbar */}
         <Navbar 
-          toggleSidebar={toggleSidebar} 
           onOpenAddLead={openAddLeadModal} 
         />
 
@@ -64,11 +75,10 @@ const Layout = ({ children }) => {
             <NavLink
               key={link.path}
               to={link.path}
-              className={({ isActive }) => 
-                `w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-150 active:scale-90 ${
-                  isActive 
-                    ? 'bg-blue-50 dark:bg-blue-950/40 text-primary' 
-                    : 'text-slate-400 hover:text-slate-650 dark:text-slate-500'
+              className={({ isActive }) =>
+                `w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-150 active:scale-90 ${isActive
+                  ? 'bg-blue-50 dark:bg-blue-950/40 text-primary'
+                  : 'text-slate-400 hover:text-slate-650 dark:text-slate-500'
                 }`
               }
               aria-label={link.name}
@@ -80,11 +90,11 @@ const Layout = ({ children }) => {
       </nav>
 
       {/* 4. Global Add Lead Modal entry form */}
-      <AddLeadModal 
-        isOpen={isAddLeadOpen} 
-        onClose={closeAddLeadModal} 
+      <AddLeadModal
+        isOpen={isAddLeadOpen}
+        onClose={closeAddLeadModal}
       />
-      
+
     </div>
   );
 };

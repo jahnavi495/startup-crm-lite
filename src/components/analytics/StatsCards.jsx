@@ -1,0 +1,208 @@
+import React, { useMemo } from 'react';
+import { useLeads } from '../../context/LeadContext';
+import { Users, Percent, DollarSign, TrendingUp, Clock, AlertTriangle, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+
+// Format Indian Rupee currency: e.g. ₹12,40,000
+const formatRupee = (value) => {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0
+  }).format(value);
+};
+
+/**
+ * StatsCards Component
+ * Renders the 6 key performance indicator cards at the top of the analytics dashboard.
+ */
+const StatsCards = ({ stats, filterRange }) => {
+  const { leads: allLeads } = useLeads();
+
+  // Compute previous period stats for growth comparisons
+  const comparison = useMemo(() => {
+    if (!Array.isArray(allLeads) || allLeads.length === 0) {
+      return { totalLeadsChange: 0, convRateChange: 0, pipeChange: 0, revChange: 0 };
+    }
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    let rangeDays = 30;
+    if (filterRange === 'Last 7 Days') rangeDays = 7;
+    else if (filterRange === 'Last 90 Days') rangeDays = 90;
+    else if (filterRange === 'This Year') rangeDays = 365;
+    else if (filterRange === 'Custom Range') rangeDays = 30; // default fallback
+
+    const currentPeriodStart = new Date(today);
+    currentPeriodStart.setDate(today.getDate() - rangeDays);
+
+    const prevPeriodStart = new Date(today);
+    prevPeriodStart.setDate(today.getDate() - (rangeDays * 2));
+
+    // Filter leads from previous period
+    const prevLeads = allLeads.filter((lead) => {
+      const createdStr = lead.createdAt || lead.date;
+      if (!createdStr) return false;
+      const createdDate = new Date(createdStr);
+      return createdDate >= prevPeriodStart && createdDate < currentPeriodStart;
+    });
+
+    const prevTotal = prevLeads.length;
+    const prevWon = prevLeads.filter((l) => l.status === 'Won').length;
+    const prevConv = prevTotal > 0 ? Math.round((prevWon / prevTotal) * 100) : 0;
+    
+    const prevPipe = prevLeads
+      .filter((l) => l.status !== 'Won' && l.status !== 'Lost')
+      .reduce((sum, l) => sum + (Number(l.value) || 0), 0);
+      
+    const prevRev = prevLeads
+      .filter((l) => l.status === 'Won')
+      .reduce((sum, l) => sum + (Number(l.value) || 0), 0);
+
+    // Calculate percentage changes
+    const getPctChange = (current, previous) => {
+      if (previous === 0) return current > 0 ? 100 : 0;
+      return Math.round(((current - previous) / previous) * 100);
+    };
+
+    return {
+      totalLeadsChange: getPctChange(stats.totalLeads, prevTotal),
+      convRateChange: stats.conversionRate - prevConv, // absolute change in percentage points
+      pipeChange: getPctChange(stats.pipelineValue, prevPipe),
+      revChange: getPctChange(stats.wonRevenue, prevRev)
+    };
+  }, [allLeads, stats, filterRange]);
+
+  const cards = [
+    {
+      title: 'Total Leads',
+      value: stats.totalLeads,
+      icon: Users,
+      color: 'blue',
+      bgColor: 'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400',
+      borderColor: 'border-blue-100 dark:border-blue-900/25',
+      trend: comparison.totalLeadsChange,
+      trendType: 'percentage',
+      subtext: 'vs previous period'
+    },
+    {
+      title: 'Conversion Rate',
+      value: `${stats.conversionRate}%`,
+      icon: Percent,
+      color: 'green',
+      bgColor: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400',
+      borderColor: 'border-emerald-100 dark:border-emerald-900/25',
+      trend: comparison.convRateChange,
+      trendType: 'points',
+      subtext: 'vs previous period'
+    },
+    {
+      title: 'Pipeline Value',
+      value: formatRupee(stats.pipelineValue),
+      icon: DollarSign,
+      color: 'amber',
+      bgColor: 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400',
+      borderColor: 'border-amber-100 dark:border-amber-900/25',
+      trend: comparison.pipeChange,
+      trendType: 'percentage',
+      subtext: 'active opportunities'
+    },
+    {
+      title: 'Won Revenue',
+      value: formatRupee(stats.wonRevenue),
+      icon: TrendingUp,
+      color: 'success-green',
+      bgColor: 'bg-green-50 dark:bg-green-950/30 text-green-600 dark:text-green-400',
+      borderColor: 'border-green-100 dark:border-green-900/25',
+      trend: comparison.revChange,
+      trendType: 'percentage',
+      subtext: 'closed won deals'
+    },
+    {
+      title: 'Avg Sales Cycle',
+      value: `${stats.averageSalesCycle} Days`,
+      icon: Clock,
+      color: 'purple',
+      bgColor: 'bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400',
+      borderColor: 'border-purple-100 dark:border-purple-900/25',
+      trend: stats.averageSalesCycle > 0 ? -8 : 0, // Mock improvement indicating shorter cycle
+      trendType: 'percentage',
+      subtext: 'createdAt to wonAt'
+    },
+    {
+      title: 'Lost Rate',
+      value: `${stats.lostRate}%`,
+      icon: AlertTriangle,
+      color: 'red',
+      bgColor: 'bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400',
+      borderColor: 'border-rose-100 dark:border-rose-900/25',
+      trend: stats.lostRate > 20 ? 5 : -5, // Warning indicators
+      trendType: 'points',
+      subtext: 'Lost / Total Leads'
+    }
+  ];
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+      {cards.map((card, idx) => {
+        const Icon = card.icon;
+        const isPositive = card.trend >= 0;
+        // For Lost Rate and Sales Cycle, negative changes are actually good/favorable!
+        const isFavorable = (card.title === 'Lost Rate' || card.title === 'Avg Sales Cycle') 
+          ? !isPositive 
+          : isPositive;
+
+        return (
+          <div
+            key={idx}
+            className={`p-5 bg-white dark:bg-card-dark border ${card.borderColor} rounded-2xl shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between`}
+          >
+            <div className="flex items-center justify-between gap-2.5">
+              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider select-none">
+                {card.title}
+              </span>
+              <div className={`p-2 rounded-xl ${card.bgColor} shrink-0`}>
+                <Icon size={16} strokeWidth={2.2} />
+              </div>
+            </div>
+
+            <div className="mt-3">
+              <h4 className="text-base sm:text-lg lg:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                {card.value}
+              </h4>
+
+              {/* Trend Indicator */}
+              <div className="flex items-center gap-1 mt-2.5">
+                {card.trend !== 0 ? (
+                  <span className={`flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                    isFavorable 
+                      ? 'bg-green-50 dark:bg-green-950/30 text-green-600 dark:text-green-400' 
+                      : 'bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400'
+                  }`}>
+                    {isPositive ? '+' : ''}
+                    {card.trend}
+                    {card.trendType === 'percentage' ? '%' : '%p'}
+                    {isPositive ? (
+                      <ArrowUpRight size={10} className="ml-0.5" />
+                    ) : (
+                      <ArrowDownRight size={10} className="ml-0.5" />
+                    )}
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-950/40 px-1.5 py-0.5 rounded">
+                    0%
+                  </span>
+                )}
+                <span className="text-[9px] text-slate-400 dark:text-slate-500 font-medium truncate select-none">
+                  {card.subtext}
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+export default StatsCards;

@@ -1,134 +1,122 @@
-import { useMemo } from 'react';
-import { useLeads } from '../context/LeadContext';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import useAnalytics from '../hooks/useAnalytics';
+import AnalyticsFilters from '../components/analytics/AnalyticsFilters';
+import StatsCards from '../components/analytics/StatsCards';
 import PieChartCard from '../components/analytics/PieChartCard';
+import FunnelChartCard from '../components/analytics/FunnelChartCard';
 import BarChartCard from '../components/analytics/BarChartCard';
 import LineChartCard from '../components/analytics/LineChartCard';
-import EmptyState from '../components/common/EmptyState';
-import { useNavigate } from 'react-router-dom';
-import { Users, Percent, Clock } from 'lucide-react';
+import RevenueChartCard from '../components/analytics/RevenueChartCard';
+import LeadSourceChart from '../components/analytics/LeadSourceChart';
+import SalesVelocityCard from '../components/analytics/SalesVelocityCard';
+import ForecastCard from '../components/analytics/ForecastCard';
+import ActivityHeatmap from '../components/analytics/ActivityHeatmap';
+import TopPerformersCard from '../components/analytics/TopPerformersCard';
+import EmptyAnalyticsState from '../components/analytics/EmptyAnalyticsState';
+import LoadingSkeleton from '../components/analytics/LoadingSkeleton';
 
 /**
  * Analytics Component
- * Renders the opportunity metrics dashboard containing:
- * 1. Summary KPI widgets (Total Opportunity count, Win Close Ratio, Avg Sales Velocity days)
- * 2. Status distribution Pie chart
- * 3. Monthly registration Bar graph
- * 4. Conversion rate trends Line chart
+ * Assembles the production-ready Sales Performance and Pipeline Analytics Dashboard.
  */
 const Analytics = () => {
-  const { leads } = useLeads();
   const navigate = useNavigate();
+  const {
+    filterRange,
+    setFilterRange,
+    customRange,
+    setCustomRange,
+    leads,
+    stats
+  } = useAnalytics();
 
-  // Summary Metrics calculations
-  const totalLeads = leads.length;
+  // Simulated transition loading state for polished skeleton pulse animation
+  const [isLoading, setIsLoading] = useState(false);
 
-  const wonLeadsCount = useMemo(() => leads.filter((l) => l.status === 'Won').length, [leads]);
-  const lostLeadsCount = useMemo(() => leads.filter((l) => l.status === 'Lost').length, [leads]);
-  
-  const closedLeadsCount = useMemo(() => wonLeadsCount + lostLeadsCount, [wonLeadsCount, lostLeadsCount]);
+  // Trigger brief loading animation on filter change to give high-fidelity feedback
+  const handleFilterRangeChange = (range) => {
+    setIsLoading(true);
+    setFilterRange(range);
+  };
 
-  // Win Close ratio percentage Won / (Won + Lost)
-  const winRate = useMemo(() => {
-    return closedLeadsCount > 0 
-      ? Math.round((wonLeadsCount / closedLeadsCount) * 100) 
-      : 0;
-  }, [closedLeadsCount, wonLeadsCount]);
-
-  // Simulated average sales cycle days based on opportunity value
-  const avgTimeToClose = useMemo(() => {
-    return totalLeads > 0 
-      ? `${Math.round(14 + (totalLeads % 5))} Days` 
-      : '0 Days';
-  }, [totalLeads]);
+  useEffect(() => {
+    if (isLoading) {
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 450);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-[1600px] mx-auto pb-8">
       
-      {/* Page Header Introduction */}
-      <div>
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
-          Analytics & Performance
+      {/* 1. Dashboard Page Header */}
+      <div className="flex flex-col gap-1 sm:gap-2">
+        <h2 className="text-xl font-extrabold text-slate-905 dark:text-white sm:text-2xl tracking-tight">
+          Analytics Dashboard
         </h2>
-        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Deep-dive diagnostics of sales velocity, acquisition channels, and close rates.
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+          Track sales performance and growth trends.
         </p>
       </div>
 
-      {totalLeads > 0 ? (
-        <>
-          {/* 1. Summary Stats Bar at the Top */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            
-            {/* Metric Card 1: Total Leads */}
-            <div className="p-5 bg-white dark:bg-card-dark border border-slate-200 dark:border-border-dark rounded-xl shadow-xs flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-primary">
-                <Users size={20} />
-              </div>
-              <div>
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider select-none">
-                  Total Leads
-                </span>
-                <h4 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                  {totalLeads}
-                </h4>
-              </div>
-            </div>
+      {/* 2. Real-time Memoized Filters toolbar */}
+      <AnalyticsFilters
+        filterRange={filterRange}
+        onFilterRangeChange={handleFilterRangeChange}
+        customRange={customRange}
+        onCustomRangeChange={setCustomRange}
+      />
 
-            {/* Metric Card 2: Won Rate % */}
-            <div className="p-5 bg-white dark:bg-card-dark border border-slate-200 dark:border-border-dark rounded-xl shadow-xs flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950/40 text-success">
-                <Percent size={20} />
-              </div>
-              <div>
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider select-none">
-                  Won Close Rate
-                </span>
-                <h4 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                  {winRate}%
-                </h4>
-              </div>
-            </div>
+      {/* 3. Loading, Empty, or Dashboard Canvas Presentation */}
+      {isLoading ? (
+        <LoadingSkeleton />
+      ) : stats.totalLeads > 0 ? (
+        <div className="space-y-6">
+          
+          {/* KPI summary section: 6 cards grid */}
+          <StatsCards 
+            leads={leads} 
+            stats={stats} 
+            filterRange={filterRange} 
+          />
 
-            {/* Metric Card 3: Avg Time to Close */}
-            <div className="p-5 bg-white dark:bg-card-dark border border-slate-200 dark:border-border-dark rounded-xl shadow-xs flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-warning">
-                <Clock size={20} />
-              </div>
-              <div>
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider select-none">
-                  Avg Time to Close
-                </span>
-                <h4 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                  {avgTimeToClose}
-                </h4>
-              </div>
-            </div>
-
-          </div>
-
-          {/* 2. Charts Grid: stack on mobile, 2 col on tablet, 3 col on desktop */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            
-            {/* Chart 1: Status Distribution Pie */}
+          {/* Row 1: Pie Chart & Funnel Chart (2 columns) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <PieChartCard leads={leads} />
-
-            {/* Chart 2: Monthly Lead Counts Bar */}
-            <BarChartCard leads={leads} />
-
-            {/* Chart 3: Conversion Line */}
-            <div className="md:col-span-2 lg:col-span-1">
-              <LineChartCard leads={leads} />
-            </div>
-
+            <FunnelChartCard leads={leads} />
           </div>
-        </>
+
+          {/* Row 2: Monthly Lead Counts Bar & Monthly Conversion Trend Line (2 columns) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <BarChartCard leads={leads} />
+            <LineChartCard leads={leads} />
+          </div>
+
+          {/* Row 3: Revenue Area Chart & Lead Source Horizontal Bar (2 columns) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <RevenueChartCard leads={leads} />
+            <LeadSourceChart leads={leads} />
+          </div>
+
+          {/* Row 4: Heatmap & Top Performers rep list (2 columns) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ActivityHeatmap leads={leads} />
+            <TopPerformersCard leads={leads} />
+          </div>
+
+          {/* Row 5: Revenue Forecast & Sales Velocity Widget (2 columns) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ForecastCard leads={leads} />
+            <SalesVelocityCard leads={leads} filterRange={filterRange} />
+          </div>
+
+        </div>
       ) : (
-        /* Render empty state fallback if lead array is empty */
-        <EmptyState 
-          totalLeadsCount={0} 
-          onClearFilters={() => {}} 
-          onAddLeadClick={() => navigate('/leads')} 
-        />
+        /* Empty State Fallback */
+        <EmptyAnalyticsState onAddLeadClick={() => navigate('/leads')} />
       )}
 
     </div>
