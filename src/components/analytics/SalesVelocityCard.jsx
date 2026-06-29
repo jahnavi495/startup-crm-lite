@@ -3,21 +3,13 @@ import { useLeads } from '../../context/LeadContext';
 import { getSalesVelocity } from '../../utils/analyticsHelpers';
 import { Zap, ArrowUpRight, ArrowDownRight, Info } from 'lucide-react';
 
-const formatRupee = (value) => {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0
-  }).format(value);
-};
-
 /**
  * SalesVelocityCard Component
  * Displays the calculated sales velocity (money flowing through pipeline per day).
  * Formula: (Opportunities * Win Rate * Avg Deal Size) / Sales Cycle Length
  */
 const SalesVelocityCard = ({ leads: filteredLeads, filterRange }) => {
-  const { leads: allLeads } = useLeads();
+  const { leads: allLeads, formatCurrency } = useLeads();
   const current = useMemo(() => getSalesVelocity(filteredLeads), [filteredLeads]);
 
   // Calculate previous period sales velocity for comparison
@@ -83,7 +75,7 @@ const SalesVelocityCard = ({ leads: filteredLeads, filterRange }) => {
         </span>
         <div className="flex items-baseline gap-1 mt-1">
           <h4 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            {formatRupee(current.velocity)}
+            {formatCurrency(current.velocity)}
           </h4>
           <span className="text-xs text-slate-500 dark:text-slate-450 font-semibold">/day</span>
         </div>
@@ -128,7 +120,7 @@ const SalesVelocityCard = ({ leads: filteredLeads, filterRange }) => {
           </div>
           <div className="p-2 bg-slate-50 dark:bg-slate-900 rounded-lg">
             <span className="text-slate-400 dark:text-slate-500 block">Avg Deal Size</span>
-            <span className="font-extrabold text-slate-855 dark:text-slate-350">{formatRupee(current.avgDealSize)}</span>
+            <span className="font-extrabold text-slate-855 dark:text-slate-350">{formatCurrency(current.avgDealSize)}</span>
           </div>
           <div className="p-2 bg-slate-50 dark:bg-slate-900 rounded-lg">
             <span className="text-slate-400 dark:text-slate-500 block">Avg Sales Cycle</span>

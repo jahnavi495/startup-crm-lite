@@ -56,11 +56,11 @@ export const LeadProvider = ({ children }) => {
     // Load leads
     try {
       const storedLeads = localStorage.getItem(leadsKey);
-      if (storedLeads) {
+      if (storedLeads && JSON.parse(storedLeads).length > 0) {
         setLeads(JSON.parse(storedLeads));
       } else {
-        // Pre-populate only if default admin; otherwise clean slate
-        const initialLeads = emailKey === 'admin@auracrm.com' ? sampleLeads : [];
+        // Pre-populate for all accounts on initialization
+        const initialLeads = sampleLeads;
         localStorage.setItem(leadsKey, JSON.stringify(initialLeads));
         setLeads(initialLeads);
       }
