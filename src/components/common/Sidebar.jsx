@@ -23,7 +23,7 @@ import { useAuth } from '../../context/AuthContext';
  */
 const Sidebar = ({ isOpen, toggleSidebar, isCollapsed = false, toggleCollapse }) => {
   const { user, logout } = useAuth();
-  
+
   const getInitials = (name) => {
     if (!name) return 'U';
     const parts = name.trim().split(/\s+/);
@@ -63,17 +63,19 @@ const Sidebar = ({ isOpen, toggleSidebar, isCollapsed = false, toggleCollapse })
         {/* Brand Header */}
         <div className={`flex ${isCollapsed ? 'flex-col justify-center py-3 gap-2.5' : 'items-center justify-between'} h-auto min-h-[64px] px-4 border-b border-slate-200 dark:border-slate-800 shrink-0`}>
           <div className="flex items-center gap-2.5 mx-auto lg:mx-0">
-            {/* Brand Logo - Loaded directly from favicon.svg to guarantee identity */}
-            <img 
-              src="/favicon.svg" 
-              alt="AuraCRM Logo" 
-              className="w-8 h-8 shrink-0 rounded-lg shadow-md shadow-primary/10 select-none"
-            />
+            {/* Brand Logo - Styled as futuristic A geometry */}
+            <svg viewBox="0 0 32 32" fill="none" className="w-8 h-8 text-primary shrink-0">
+              <g stroke="currentColor" strokeWidth="2.8" strokeLinejoin="round" strokeLinecap="round">
+                <path d="M 6 26 L 18 5 L 21 11" />
+                <path d="M 22.5 14.5 L 27 26" />
+                <path d="M 8 20 L 29 11 M 29 11 L 23 8 M 29 11 L 26 17" />
+              </g>
+            </svg>
 
             {/* Brand details - Hidden on tablet collapsed sidebar or when collapsed */}
             <div className={`hidden ${isCollapsed ? 'md:hidden' : 'lg:flex'} items-center gap-1.5`}>
-              <span className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
-                Aura<span className="text-primary">CRM</span>
+              <span className="text-sm font-bold tracking-tight text-slate-900 dark:text-white uppercase">
+                AURA<span className="text-primary">CRM</span>
               </span>
               <span className="text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-400 px-1.5 py-0.2 rounded font-mono font-semibold uppercase tracking-wider">
                 Lite
@@ -81,16 +83,6 @@ const Sidebar = ({ isOpen, toggleSidebar, isCollapsed = false, toggleCollapse })
             </div>
           </div>
 
-          {/* Desktop/Tablet Collapse Arrow Trigger */}
-          <button
-            type="button"
-            className="hidden md:flex p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white transition-colors duration-150 focus:outline-hidden cursor-pointer"
-            onClick={toggleCollapse}
-            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            {isCollapsed ? <ChevronsRight size={16} /> : <ChevronsLeft size={16} />}
-          </button>
 
           {/* Close Sidebar Drawer Button (Mobile only) */}
           <button
@@ -120,9 +112,9 @@ const Sidebar = ({ isOpen, toggleSidebar, isCollapsed = false, toggleCollapse })
                   if (window.innerWidth < 768) toggleSidebar();
                 }}
                 className={({ isActive }) =>
-                  `group flex items-center ${isCollapsed ? 'justify-center' : 'justify-center lg:justify-start'} gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-all duration-150 ${isActive
-                    ? 'bg-primary text-white shadow-md shadow-primary/10 font-semibold'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-950 dark:hover:text-slate-100'
+                  `group flex items-center ${isCollapsed ? 'justify-center' : 'justify-center lg:justify-start'} gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${isActive
+                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white font-semibold'
+                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/30 hover:text-slate-900 dark:hover:text-white'
                   }`
                 }
                 title={link.name}
@@ -134,11 +126,10 @@ const Sidebar = ({ isOpen, toggleSidebar, isCollapsed = false, toggleCollapse })
                     {/* Text Labels - Hidden on tablet collapsed sidebar or when collapsed */}
                     <div className={`hidden ${isCollapsed ? 'md:hidden' : 'lg:flex'} flex-col text-left`}>
                       <span className="font-semibold text-xs leading-none">{link.name}</span>
-                      <span className={`text-[9px] mt-1 font-medium leading-none truncate max-w-[150px] ${
-                        isActive
-                          ? 'text-blue-200/95'
-                          : 'text-slate-450 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200'
-                      }`}>
+                      <span className={`text-[9px] mt-1 font-medium leading-none truncate max-w-[150px] ${isActive
+                          ? 'text-slate-500 dark:text-slate-400'
+                          : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-350'
+                        }`}>
                         {link.subLabel}
                       </span>
                     </div>

@@ -17,7 +17,7 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Waitlist flows
   const [isWaitlisted, setIsWaitlisted] = useState(false);
   const [waitlistNumber, setWaitlistNumber] = useState(0);
@@ -45,7 +45,7 @@ const Register = () => {
         // Save to waitlist in local storage for simulated data record
         const storedWaitlist = localStorage.getItem('startup-crm-waitlist') || '[]';
         const waitlist = JSON.parse(storedWaitlist);
-        
+
         const alreadyWaitlisted = waitlist.some((u) => u.email.toLowerCase() === email.toLowerCase());
         if (alreadyWaitlisted) {
           throw new Error('This email is already in our priority waitlist.');
@@ -98,18 +98,18 @@ const Register = () => {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-pink-500/5 blur-3xl animate-float-alternate" />
 
         {/* Success Card */}
-        <div className="w-full max-w-md bg-white/85 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200 dark:border-slate-800/80 p-8 rounded-3xl shadow-xl dark:shadow-2xl relative z-10 text-center animate-fade-in transition-all">
+        <div className="w-full max-w-md bg-white/85 dark:bg-[#1C1C1C]/90 backdrop-blur-xl border border-slate-100 dark:border-slate-800/40 p-8 rounded-3xl shadow-xl dark:shadow-2xl relative z-10 text-center animate-fade-in transition-all">
           <div className="w-16 h-16 rounded-full bg-green-500/10 dark:bg-green-500/15 text-green-500 flex items-center justify-center mx-auto mb-4 border border-green-500/20 dark:border-green-500/30">
             <CheckCircle size={28} className="animate-pulse" />
           </div>
-          
-          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
             You're on the Waitlist! 🎉
           </h2>
-          
+
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-2.5 leading-relaxed">
-            Thank you for registering, <strong className="text-slate-805 dark:text-white">{name}</strong>! 
-            AuraCRM is currently in invite-only private beta. We've reserved your slot.
+            Thank you for registering, <strong className="text-slate-800 dark:text-white">{name}</strong>!
+            AURA<span className="text-primary font-bold">CRM</span> is currently in invite-only private beta. We've reserved your slot.
           </p>
 
           {/* Position Number Card */}
@@ -153,34 +153,25 @@ const Register = () => {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-pink-500/5 blur-3xl animate-float-alternate" />
 
       {/* Registration Card */}
-      <div className="w-full max-w-md bg-white/85 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200 dark:border-slate-800/80 p-8 rounded-3xl shadow-xl dark:shadow-2xl relative z-10 animate-fade-in transition-all">
-        
+      <div className="w-full max-w-md bg-white/85 dark:bg-[#1C1C1C]/90 backdrop-blur-xl border border-slate-100 dark:border-slate-800/40 p-8 rounded-3xl shadow-xl dark:shadow-2xl relative z-10 animate-fade-in transition-all">
+
         {/* Header Title */}
         <div className="flex flex-col items-center text-center mb-8 select-none">
           <div className="w-12 h-12 mb-3.5 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" className="w-full h-full">
-              <defs>
-                <linearGradient id="registerLogoGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#2563EB" />
-                  <stop offset="50%" stopColor="#0EA5E9" />
-                  <stop offset="100%" stopColor="#10B981" />
-                </linearGradient>
-              </defs>
-              <g stroke="url(#registerLogoGrad)" strokeWidth="2.8" strokeLinejoin="round" strokeLinecap="round">
-                {/* Left leg */}
+            {/* Brand Logo - Styled as futuristic A geometry */}
+            <svg viewBox="0 0 32 32" fill="none" className="w-12 h-12 text-primary">
+              <g stroke="currentColor" strokeWidth="2.8" strokeLinejoin="round" strokeLinecap="round">
                 <path d="M 6 26 L 18 5 L 21 11" />
-                {/* Right leg */}
                 <path d="M 22.5 14.5 L 27 26" />
-                {/* Futuristic arrow crossbar pointing up-right */}
                 <path d="M 8 20 L 29 11 M 29 11 L 23 8 M 29 11 L 26 17" />
               </g>
             </svg>
           </div>
-          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 justify-center">
             Create an Account
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Get started with your free AuraCRM workspace
+          <p className="text-xs text-slate-505 dark:text-slate-400 mt-1">
+            Get started with your free AURA <span className='text-primary font-bold'>CRM</span> workspace
           </p>
         </div>
 

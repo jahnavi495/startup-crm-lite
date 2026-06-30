@@ -94,8 +94,8 @@ const LeadTable = ({ leads, onEditLead, onDeleteLead }) => {
           <div className="hidden md:block">
             {viewMode === 'table' ? (
               /* Table Layout */
-              <div className="bg-white dark:bg-card-dark border border-slate-200 dark:border-border-dark rounded-xl shadow-xs overflow-hidden">
-                <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-800 text-left">
+              <div className="bg-white dark:bg-[#1C1C1C] border border-slate-100 dark:border-slate-800/40 rounded-2xl shadow-xs overflow-hidden">
+                <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-805/40 text-left">
                   <thead className="bg-slate-50/75 dark:bg-slate-950/20 text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                     <tr>
                       <th className="px-6 py-4">Contact</th>

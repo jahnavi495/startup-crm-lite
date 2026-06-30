@@ -62,25 +62,25 @@ const PipelineOverview = ({ leads }) => {
   };
 
   return (
-    <div className="p-5 bg-white dark:bg-card-dark border border-slate-200 dark:border-border-dark rounded-xl shadow-xs">
-      <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+    <div className="p-5 bg-white dark:bg-[#1C1C1C] border border-slate-100 dark:border-slate-800/40 rounded-2xl shadow-xs">
+      <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
         Pipeline Segment Summary
       </h3>
-      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-5">
+      <p className="text-[11px] text-slate-450 dark:text-slate-500 mt-1 mb-5 leading-relaxed">
         Visual representation of active opportunities across pipeline stages.
       </p>
 
       {totalLeads > 0 ? (
         <div className="space-y-5">
           {/* Horizontal Progress Bar representing percentages of each stage */}
-          <div className="h-4 w-full flex rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden shadow-inner">
+          <div className="h-3 w-full flex rounded-full bg-slate-100 dark:bg-slate-850 overflow-hidden">
             {stageStats.map((stat) => {
               if (stat.count === 0) return null;
               return (
                 <div
                   key={stat.name}
                   style={{ width: `${stat.percentage}%` }}
-                  className={`${STAGE_COLORS[stat.name]} h-full transition-opacity duration-150 hover:opacity-90`}
+                  className={`${STAGE_COLORS[stat.name]} h-full transition-opacity duration-150 hover:opacity-95`}
                   title={`${stat.name}: ${stat.count} leads (${Math.round(stat.percentage)}%)`}
                 />
               );

@@ -1,20 +1,20 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #2563EB;
-  --color-success: #22C55E;
+  --color-primary: #007AFF;
+  --color-success: #10B981;
   --color-warning: #F59E0B;
   --color-danger: #EF4444;
-  --color-bg: #F8FAFC;
+  --color-bg: #F7F9FB;
   --color-card-white: #FFFFFF;
-  --color-text-dark: #0F172A;
-  --color-text-grey: #64748B;
+  --color-text-dark: #1C1C1C;
+  --color-text-grey: #94A3B8;
   
-  /* AuraCRM Custom Dark Palette */
-  --color-brand-dark: #090D16;
-  --color-card-dark: #0F172A;
-  --color-border-dark: #1E293B;
-  --color-hover-dark: #1E293B;
+  /* snowui / AuraCRM Custom Dark Palette */
+  --color-brand-dark: #0E0E11;
+  --color-card-dark: #1C1C1C;
+  --color-border-dark: #2C2D30;
+  --color-hover-dark: #2C2D30;
 }
 
 /* Enable class-based dark mode variant in Tailwind v4 */

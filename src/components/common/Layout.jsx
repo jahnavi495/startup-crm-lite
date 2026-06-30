@@ -63,6 +63,8 @@ const Layout = ({ children }) => {
         {/* Top Header Navigation Toolbar */}
         <Navbar
           onOpenAddLead={openAddLeadModal}
+          isCollapsed={isCollapsed}
+          toggleCollapse={toggleCollapse}
         />
 
         {/* Content canvas with dynamic view entrance animation */}

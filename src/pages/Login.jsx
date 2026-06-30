@@ -62,31 +62,25 @@ const Login = () => {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-pink-500/5 blur-3xl animate-float-alternate" />
 
       {/* Login Card */}
-      <div className="w-full max-w-md bg-white/85 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200 dark:border-slate-800/80 p-8 rounded-3xl shadow-xl dark:shadow-2xl relative z-10 animate-fade-in transition-all">
+      <div className="w-full max-w-md bg-white/85 dark:bg-[#1C1C1C]/90 backdrop-blur-xl border border-slate-100 dark:border-slate-800/40 p-8 rounded-3xl shadow-xl dark:shadow-2xl relative z-10 animate-fade-in transition-all">
         
         {/* Brand/Logo Header */}
         <div className="flex flex-col items-center text-center mb-8 select-none">
           <div className="w-12 h-12 mb-3.5 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" className="w-full h-full">
-              <defs>
-                <linearGradient id="loginLogoGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#2563EB" />
-                  <stop offset="50%" stopColor="#0EA5E9" />
-                  <stop offset="100%" stopColor="#10B981" />
-                </linearGradient>
-              </defs>
-              <g stroke="url(#loginLogoGrad)" strokeWidth="2.8" strokeLinejoin="round" strokeLinecap="round">
-                {/* Left leg */}
+            {/* Brand Logo - Styled as futuristic A geometry */}
+            <svg viewBox="0 0 32 32" fill="none" className="w-12 h-12 text-primary">
+              <g stroke="currentColor" strokeWidth="2.8" strokeLinejoin="round" strokeLinecap="round">
                 <path d="M 6 26 L 18 5 L 21 11" />
-                {/* Right leg */}
                 <path d="M 22.5 14.5 L 27 26" />
-                {/* Futuristic arrow crossbar pointing up-right */}
                 <path d="M 8 20 L 29 11 M 29 11 L 23 8 M 29 11 L 26 17" />
               </g>
             </svg>
           </div>
-          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            Welcome to Aura<span className="text-primary">CRM</span>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5 justify-center">
+            Welcome to AURA<span className="text-primary">CRM</span>
+            <span className="text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-400 px-1.5 py-0.2 rounded font-mono font-semibold uppercase tracking-wider select-none">
+              Lite
+            </span>
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Sign in to access your sales workspace

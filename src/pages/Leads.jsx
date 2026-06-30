@@ -134,7 +134,7 @@ const Leads = () => {
       </div>
 
       {/* 2. Search & Filter Bar Group */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-white dark:bg-card-dark p-4 rounded-xl border border-slate-200 dark:border-border-dark shadow-xs">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-white dark:bg-[#1C1C1C] p-4 rounded-2xl border border-slate-100 dark:border-slate-800/40 shadow-xs">
         
         {/* Search Bar Input */}
         <SearchBar value={searchQuery} onChange={setSearchQuery} />
@@ -176,16 +176,16 @@ const Leads = () => {
           />
 
           {/* Modal content body card: full screen on mobile, centered max-w-lg on tablet+ */}
-          <div className="relative w-full h-full sm:h-auto sm:max-w-lg bg-white dark:bg-gray-800 border-0 sm:border border-slate-200 dark:border-gray-700 sm:rounded-xl shadow-xl z-10 overflow-hidden transform transition-all max-h-screen sm:max-h-[90vh] flex flex-col animate-fade-in">
+          <div className="relative w-full h-full sm:h-auto sm:max-w-lg bg-white dark:bg-[#1C1C1C] border-0 sm:border border-slate-100 dark:border-slate-800/40 sm:rounded-2xl shadow-xl z-10 overflow-hidden transform transition-all max-h-screen sm:max-h-[90vh] flex flex-col animate-fade-in">
             
             {/* Title Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/10">
               <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
                 {selectedLead ? 'Modify Lead Details' : 'Register New Lead'}
               </h2>
               <button 
                 type="button"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-500 dark:hover:text-slate-350 hover:bg-slate-100 dark:hover:bg-hover-dark transition-colors duration-150 focus:outline-hidden"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-505 dark:hover:text-slate-350 hover:bg-slate-105 dark:hover:bg-hover-dark transition-colors duration-150 focus:outline-hidden"
                 onClick={handleCloseModal}
                 aria-label="Close dialog modal"
               >

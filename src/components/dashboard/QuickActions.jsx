@@ -82,12 +82,12 @@ const QuickActions = ({ onAddLeadClick }) => {
   };
 
   return (
-    <div className="p-6 bg-white dark:bg-card-dark border border-slate-200 dark:border-border-dark rounded-2xl shadow-sm hover:shadow-md transition-all duration-205 flex flex-col justify-between">
+    <div className="p-6 bg-white dark:bg-[#1C1C1C] border border-slate-100 dark:border-slate-800/40 rounded-2xl shadow-xs transition-all duration-205 flex flex-col justify-between">
       <div>
-        <h3 className="text-sm sm:text-base font-bold text-slate-905 dark:text-white">
+        <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
           Quick Actions
         </h3>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-5">
+        <p className="text-[11px] text-slate-450 dark:text-slate-500 mt-1 mb-5 leading-relaxed">
           Accelerate standard lead workflows with one-click routines.
         </p>
       </div>

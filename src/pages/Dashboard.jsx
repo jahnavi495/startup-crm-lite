@@ -99,38 +99,38 @@ const Dashboard = () => {
             
             {/* Metric 1: Total Leads */}
             <StatsCard
+              index={0}
               title="Total Leads"
               value={totalLeads}
               icon={Users}
               change={8.2}
-              color="primary"
             />
 
             {/* Metric 2: Active Pipeline Value */}
             <StatsCard
+              index={1}
               title="Active Pipeline"
               value={formatCurrency(pipelineValue)}
               icon={PipelineIcon}
               change={12.4}
-              color="warning"
             />
 
             {/* Metric 3: Conversion Win Rate */}
             <StatsCard
+              index={2}
               title="Win Rate"
               value={`${winRate}%`}
               icon={Percent}
               change={-1.5}
-              color="success"
             />
 
             {/* Metric 4: Closed Revenue Won */}
             <StatsCard
+              index={3}
               title="Closed Revenue"
               value={formatCurrency(closedWonRevenue)}
               icon={TrendingUp}
               change={24.1}
-              color="danger"
             />
 
           </div>
