@@ -48,7 +48,7 @@ const LeadTable = ({ leads, onEditLead, onDeleteLead }) => {
         <button
           type="button"
           onClick={() => setViewMode('table')}
-          className={`p-2 rounded-lg border transition-all cursor-pointer focus:outline-hidden ${
+          className={`p-2 rounded-xl border transition-all cursor-pointer focus:outline-hidden ${
             viewMode === 'table'
               ? 'bg-slate-100 dark:bg-slate-800 text-primary border-slate-300 dark:border-slate-700'
               : 'bg-white dark:bg-card-dark text-slate-400 border-slate-200 dark:border-border-dark hover:bg-slate-50 dark:hover:bg-hover-dark'
@@ -63,7 +63,7 @@ const LeadTable = ({ leads, onEditLead, onDeleteLead }) => {
         <button
           type="button"
           onClick={() => setViewMode('card')}
-          className={`p-2 rounded-lg border transition-all cursor-pointer focus:outline-hidden ${
+          className={`p-2 rounded-xl border transition-all cursor-pointer focus:outline-hidden ${
             viewMode === 'card'
               ? 'bg-slate-100 dark:bg-slate-800 text-primary border-slate-300 dark:border-slate-700'
               : 'bg-white dark:bg-card-dark text-slate-400 border-slate-200 dark:border-border-dark hover:bg-slate-50 dark:hover:bg-hover-dark'
@@ -174,7 +174,7 @@ const LeadTable = ({ leads, onEditLead, onDeleteLead }) => {
                             <button
                               type="button"
                               onClick={() => onEditLead(lead)}
-                              className="p-1.5 rounded-lg border border-slate-200 dark:border-border-dark text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-hover-dark transition-colors focus:outline-hidden"
+                              className="p-1.5 rounded-xl border border-slate-200 dark:border-border-dark text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-hover-dark transition-colors focus:outline-hidden"
                               title="Edit Lead"
                               aria-label={`Edit ${lead.name}`}
                             >
@@ -185,7 +185,7 @@ const LeadTable = ({ leads, onEditLead, onDeleteLead }) => {
                             <button
                               type="button"
                               onClick={() => onDeleteLead(lead.id)}
-                              className="p-1.5 rounded-lg border border-slate-200 dark:border-border-dark text-danger hover:bg-red-50 dark:hover:bg-red-950/20 hover:border-red-200/50 transition-colors focus:outline-hidden"
+                              className="p-1.5 rounded-xl border border-slate-200 dark:border-border-dark text-danger hover:bg-red-50 dark:hover:bg-red-950/20 hover:border-red-200/50 transition-colors focus:outline-hidden"
                               title="Delete Lead"
                               aria-label={`Delete ${lead.name}`}
                             >

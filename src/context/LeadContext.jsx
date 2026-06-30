@@ -34,6 +34,7 @@ export const LeadProvider = ({ children }) => {
   const [leads, setLeads] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [currency, setCurrencyState] = useState('₹');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Dynamically load leads, notifications and currency when the user session changes
   useEffect(() => {
@@ -341,7 +342,9 @@ export const LeadProvider = ({ children }) => {
         changeCurrency,
         formatCurrency,
         formatCurrencyShort,
-        loadDemoLeads
+        loadDemoLeads,
+        searchQuery,
+        setSearchQuery
       }}
     >
       {children}

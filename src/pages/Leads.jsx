@@ -20,10 +20,9 @@ import { Plus, X } from 'lucide-react';
  */
 const Leads = () => {
   // Pull database elements from Lead context
-  const { leads, addLead, updateLead, deleteLead, loadDemoLeads } = useLeads();
+  const { leads, addLead, updateLead, deleteLead, loadDemoLeads, searchQuery, setSearchQuery } = useLeads();
 
   // Search and Filter states
-  const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
 
   // Modal display and selection control states
@@ -126,7 +125,7 @@ const Leads = () => {
         <button
           type="button"
           onClick={handleOpenAddModal}
-          className="flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white bg-primary hover:bg-blue-700 active:bg-blue-800 rounded-lg shadow-sm hover:shadow-md cursor-pointer transition-all duration-150 active:scale-98 focus:outline-hidden shrink-0"
+          className="flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white bg-primary hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-sm hover:shadow-md cursor-pointer transition-all duration-150 active:scale-98 focus:outline-hidden shrink-0"
         >
           <Plus size={16} />
           <span>Add New Lead</span>
@@ -185,7 +184,7 @@ const Leads = () => {
               </h2>
               <button 
                 type="button"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-505 dark:hover:text-slate-350 hover:bg-slate-105 dark:hover:bg-hover-dark transition-colors duration-150 focus:outline-hidden"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-505 dark:hover:text-slate-350 hover:bg-slate-105 dark:hover:bg-hover-dark transition-colors duration-150 focus:outline-hidden"
                 onClick={handleCloseModal}
                 aria-label="Close dialog modal"
               >

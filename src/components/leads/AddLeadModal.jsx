@@ -66,7 +66,7 @@ const AddLeadModal = ({ isOpen, onClose, leadToEdit = null }) => {
           </h2>
           <button
             type="button"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-500 dark:hover:text-slate-350 hover:bg-slate-100 dark:hover:bg-hover-dark transition-colors focus:outline-hidden"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-505 dark:hover:text-slate-350 hover:bg-slate-105 dark:hover:bg-hover-dark transition-colors focus:outline-hidden"
             onClick={onClose}
             aria-label="Close dialog modal"
           >

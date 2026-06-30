@@ -26,7 +26,7 @@ const AnalyticsFilters = ({ filterRange, onFilterRangeChange, customRange, onCus
               key={preset}
               type="button"
               onClick={() => onFilterRangeChange(preset)}
-              className={`px-4 py-2 text-xs font-semibold rounded-lg cursor-pointer transition-all duration-150 active:scale-95 ${
+              className={`px-4 py-2 text-xs font-semibold rounded-xl cursor-pointer transition-all duration-150 active:scale-95 ${
                 filterRange === preset
                   ? 'bg-white dark:bg-slate-850 text-primary shadow-xs font-bold'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'

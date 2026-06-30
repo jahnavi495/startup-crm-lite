@@ -57,7 +57,7 @@ const LeadCard = ({ lead, onEdit, onDelete }) => {
           <button
             type="button"
             onClick={onEdit}
-            className="p-1.5 rounded-lg border border-slate-200 dark:border-border-dark text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-hover-dark transition-colors focus:outline-hidden"
+            className="p-1.5 rounded-xl border border-slate-200 dark:border-border-dark text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-hover-dark transition-colors focus:outline-hidden"
             title="Edit Lead"
             aria-label={`Edit ${lead.name}`}
           >
@@ -66,7 +66,7 @@ const LeadCard = ({ lead, onEdit, onDelete }) => {
           <button
             type="button"
             onClick={onDelete}
-            className="p-1.5 rounded-lg border border-slate-200 dark:border-border-dark text-danger hover:bg-red-50 dark:hover:bg-red-950/20 hover:border-red-200/50 transition-colors focus:outline-hidden"
+            className="p-1.5 rounded-xl border border-slate-200 dark:border-border-dark text-danger hover:bg-red-50 dark:hover:bg-red-950/20 hover:border-red-200/50 transition-colors focus:outline-hidden"
             title="Delete Lead"
             aria-label={`Delete ${lead.name}`}
           >

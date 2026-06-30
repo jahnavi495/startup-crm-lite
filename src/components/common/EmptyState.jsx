@@ -39,7 +39,7 @@ const EmptyState = ({ totalLeadsCount, onClearFilters, onAddLeadClick, onLoadDem
             <button
               type="button"
               onClick={onAddLeadClick}
-              className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white bg-primary hover:bg-blue-700 rounded-lg shadow-sm hover:shadow-md cursor-pointer transition-all duration-150 active:scale-98 focus:outline-hidden"
+              className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white bg-primary hover:bg-blue-700 rounded-xl shadow-sm hover:shadow-md cursor-pointer transition-all duration-150 active:scale-98 focus:outline-hidden"
             >
               <Plus size={15} />
               <span>Create First Lead</span>
@@ -47,7 +47,7 @@ const EmptyState = ({ totalLeadsCount, onClearFilters, onAddLeadClick, onLoadDem
             <button
               type="button"
               onClick={onLoadDemoClick}
-              className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-border-dark bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-hover-dark rounded-lg cursor-pointer transition-all duration-150 active:scale-98 focus:outline-hidden"
+              className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-border-dark bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-hover-dark rounded-xl cursor-pointer transition-all duration-150 active:scale-98 focus:outline-hidden"
             >
               <span>Load Sample Leads</span>
             </button>
@@ -68,7 +68,7 @@ const EmptyState = ({ totalLeadsCount, onClearFilters, onAddLeadClick, onLoadDem
           <button
             type="button"
             onClick={onClearFilters}
-            className="mt-5 px-4 py-2 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-border-dark bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-hover-dark rounded-lg cursor-pointer transition-all duration-150 active:scale-98 focus:outline-hidden"
+            className="mt-5 px-4 py-2 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-border-dark bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-hover-dark rounded-xl cursor-pointer transition-all duration-150 active:scale-98 focus:outline-hidden"
           >
             Clear Search & Filters
           </button>

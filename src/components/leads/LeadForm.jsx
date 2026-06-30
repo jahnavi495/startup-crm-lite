@@ -211,13 +211,13 @@ const LeadForm = ({ initialData = null, onSubmit, onCancel }) => {
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-sm font-semibold border border-slate-200 dark:border-border-dark hover:bg-slate-100 dark:hover:bg-hover-dark text-slate-700 dark:text-slate-300 rounded-lg cursor-pointer transition-all active:scale-98"
+          className="px-4 py-2 text-sm font-semibold border border-slate-200 dark:border-border-dark hover:bg-slate-100 dark:hover:bg-hover-dark text-slate-700 dark:text-slate-300 rounded-xl cursor-pointer transition-all active:scale-98"
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="px-4 py-2 text-sm font-semibold text-white bg-primary hover:bg-blue-700 rounded-lg shadow-sm hover:shadow-md cursor-pointer transition-all active:scale-98"
+          className="px-4 py-2 text-sm font-semibold text-white bg-primary hover:bg-blue-700 rounded-xl shadow-sm hover:shadow-md cursor-pointer transition-all active:scale-98"
         >
           {initialData ? 'Save Changes' : 'Create Lead'}
         </button>

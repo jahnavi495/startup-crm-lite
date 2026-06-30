@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Bell, Plus, LogOut, PanelLeft, Star, Columns, Search } from 'lucide-react';
+import { Bell, Plus, LogOut, PanelLeft } from 'lucide-react';
 import DarkModeToggle from './DarkModeToggle';
 import NotificationDropdown from './NotificationDropdown';
 import { useLeads } from '../../context/LeadContext';
@@ -64,20 +64,6 @@ const Navbar = ({ onOpenAddLead, isCollapsed, toggleCollapse }) => {
 
       {/* Right Area: Controls (Search capsule, Add Lead button, dark mode toggle, alerts notification, Logout) */}
       <div className="flex items-center gap-2 sm:gap-2.5">
-        {/* Capsule Search Bar */}
-        <div className="relative hidden lg:block w-40 xl:w-48 select-none">
-          <Search size={13} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
-          <input
-            type="text"
-            placeholder="Search"
-            disabled
-            className="w-full pl-8.5 pr-8 py-1 text-xs rounded-full bg-slate-100/70 dark:bg-slate-800/60 text-slate-450 dark:text-slate-500 border border-transparent select-none cursor-not-allowed opacity-80"
-          />
-          <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-slate-450 dark:text-slate-550 bg-white dark:bg-slate-900 px-1.5 py-0.2 rounded border border-slate-200 dark:border-slate-800 font-sans font-semibold">
-            /
-          </kbd>
-        </div>
-
         {/* Add Lead Button */}
         <button
           type="button"

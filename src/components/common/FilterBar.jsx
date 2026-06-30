@@ -38,7 +38,7 @@ const FilterBar = ({ activeFilter, onFilterChange, leads }) => {
             key={filter}
             type="button"
             onClick={() => onFilterChange(filter)}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer focus:outline-hidden ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer focus:outline-hidden ${
               isActive
                 ? 'bg-primary text-white shadow-xs'
                 : 'bg-white dark:bg-card-dark border border-slate-200 dark:border-border-dark text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-hover-dark'
