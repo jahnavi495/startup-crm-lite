@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useLeads } from '../../context/LeadContext';
 
 const STAGES = ['New', 'Contacted', 'Meeting Scheduled', 'Proposal Sent', 'Won', 'Lost'];
 
@@ -32,6 +33,7 @@ const STAGE_COLORS = {
  * @param {PipelineOverviewProps} props
  */
 const PipelineOverview = ({ leads }) => {
+  const { formatCurrency } = useLeads();
   const totalLeads = leads.length;
 
   const stageStats = useMemo(() => {
@@ -48,13 +50,6 @@ const PipelineOverview = ({ leads }) => {
       };
     });
   }, [leads, totalLeads]);
-
-  const formatCurrency = (amount) =>
-    new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0
-    }).format(amount);
 
   return (
     <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:border-slate-800 dark:bg-slate-900">

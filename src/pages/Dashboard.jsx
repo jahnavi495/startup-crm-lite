@@ -4,17 +4,17 @@ import StatsCard from '../components/dashboard/StatsCard';
 import PipelineOverview from '../components/dashboard/PipelineOverview';
 import RecentLeads from '../components/dashboard/RecentLeads';
 import QuickActions from '../components/dashboard/QuickActions';
-import { sampleLeads } from '../data/sampleLeads';
+import { useLeads } from '../context/LeadContext';
 
 /**
  * Dashboard Page Component
  * Assembles the main CRM dashboard experience with KPI cards, pipeline insight,
- * recent lead activity, and quick actions. The page uses sample data for now.
+ * recent lead activity, and quick actions.
  */
 const Dashboard = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  const leads = sampleLeads;
+  const { leads, formatCurrency } = useLeads();
 
   const metrics = useMemo(() => {
     const totalLeads = leads.length;
@@ -32,13 +32,6 @@ const Dashboard = () => {
       closedRevenue
     };
   }, [leads]);
-
-  const formatCurrency = (amount) =>
-    new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0
-    }).format(amount);
 
   return (
     <div className="space-y-6">

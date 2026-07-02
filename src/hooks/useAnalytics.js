@@ -1,20 +1,10 @@
 import { useState, useMemo } from 'react';
 import { useLeads } from '../context/LeadContext';
 import {
-  getStatusDistribution,
-  getMonthlyLeads,
-  getConversionByMonth,
-  getRevenueByMonth,
   getPipelineValue,
   getWonRevenue,
   getAverageSalesCycle,
-  getLostRate,
-  getLeadSourceStats,
-  getFunnelData,
-  getSalesVelocity,
-  getForecastRevenue,
-  getTopPerformers,
-  getActivityHeatmapData
+  getLostRate
 } from '../utils/analyticsHelpers';
 
 /**
@@ -99,31 +89,13 @@ const useAnalytics = () => {
     };
   }, [filteredLeads]);
 
-  // Compute trend metrics for comparison (e.g. for Sales Velocity)
-  // We can calculate comparison metrics on the full/unfiltered leads list
-  const totalStats = useMemo(() => {
-    return {
-      statusDistribution: getStatusDistribution(filteredLeads),
-      monthlyLeads: getMonthlyLeads(filteredLeads),
-      conversionTrend: getConversionByMonth(filteredLeads),
-      revenueTrend: getRevenueByMonth(filteredLeads),
-      leadSourceStats: getLeadSourceStats(filteredLeads),
-      funnelData: getFunnelData(filteredLeads),
-      salesVelocity: getSalesVelocity(filteredLeads),
-      forecastRevenue: getForecastRevenue(filteredLeads),
-      topPerformers: getTopPerformers(filteredLeads),
-      activityHeatmapData: getActivityHeatmapData(filteredLeads)
-    };
-  }, [filteredLeads]);
-
   return {
     filterRange,
     setFilterRange,
     customRange,
     setCustomRange,
     leads: filteredLeads,
-    stats,
-    charts: totalStats
+    stats
   };
 };
 

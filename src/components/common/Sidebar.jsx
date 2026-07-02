@@ -56,7 +56,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isCollapsed = false, toggleCollapse })
       <aside
         className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 transition-all duration-250 ease-in-out
           ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
-          md:translate-x-0 ${isCollapsed ? 'md:w-20 lg:w-20' : 'md:w-20 lg:w-64'}`}
+          md:translate-x-0 ${isCollapsed ? 'md:w-20 lg:w-20' : 'md:w-52 lg:w-64'}`}
       >
 
         {/* Brand Header */}
@@ -72,7 +72,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isCollapsed = false, toggleCollapse })
             </svg>
 
             {/* Brand details - Hidden on tablet collapsed sidebar or when collapsed */}
-            <div className={`hidden ${isCollapsed ? 'md:hidden' : 'lg:flex'} items-center gap-1.5`}>
+            <div className={`hidden ${isCollapsed ? 'md:hidden' : 'md:flex'} items-center gap-1.5`}>
               <span className="text-sm font-bold tracking-tight text-slate-900 dark:text-white uppercase">
                 AURA<span className="text-primary">CRM</span>
               </span>
@@ -97,7 +97,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isCollapsed = false, toggleCollapse })
         {/* Sidebar NavLinks */}
         <nav className="flex-1 px-3 py-6 space-y-2">
           {/* Workspace label - Hidden on tablet collapsed sidebar or when collapsed */}
-          <p className={`hidden ${isCollapsed ? 'md:hidden' : 'lg:block'} px-3.5 mb-2.5 text-[10px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase select-none`}>
+          <p className={`hidden ${isCollapsed ? 'md:hidden' : 'md:block'} px-3.5 mb-2.5 text-[10px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase select-none`}>
             Workspace
           </p>
 
@@ -111,7 +111,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isCollapsed = false, toggleCollapse })
                   if (window.innerWidth < 768) toggleSidebar();
                 }}
                 className={({ isActive }) =>
-                  `group flex items-center ${isCollapsed ? 'justify-center' : 'justify-center lg:justify-start'} gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${isActive
+                  `group flex items-center ${isCollapsed ? 'justify-center' : 'justify-center md:justify-start'} gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${isActive
                     ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white font-semibold'
                     : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/30 hover:text-slate-900 dark:hover:text-white'
                   }`
@@ -123,9 +123,9 @@ const Sidebar = ({ isOpen, toggleSidebar, isCollapsed = false, toggleCollapse })
                     <IconComponent size={18} strokeWidth={2} className="shrink-0" />
 
                     {/* Text Labels - Hidden on tablet collapsed sidebar or when collapsed */}
-                    <div className={`hidden ${isCollapsed ? 'md:hidden' : 'lg:flex'} flex-col text-left`}>
+                    <div className={`hidden ${isCollapsed ? 'md:hidden' : 'md:flex'} flex-col text-left`}>
                       <span className="font-semibold text-xs leading-none">{link.name}</span>
-                      <span className={`text-[9px] mt-1 font-medium leading-none truncate max-w-37.5 ${isActive
+                      <span className={`hidden lg:block text-[9px] mt-1 font-medium leading-none truncate max-w-37.5 ${isActive
                           ? 'text-slate-500 dark:text-slate-400'
                           : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-350'
                         }`}>
@@ -141,7 +141,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isCollapsed = false, toggleCollapse })
 
         {/* User profile footer */}
         <div className="p-3 lg:p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 shrink-0">
-          <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-center lg:justify-between'} gap-3`}>
+          <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-center md:justify-between'} gap-3`}>
             {/* Profile Avatar */}
             <div className="relative w-9 h-9 rounded-xl bg-slate-250 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-750 dark:text-white border border-slate-300 dark:border-slate-700 select-none shrink-0" title={user?.name}>
               {initials}
@@ -149,7 +149,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isCollapsed = false, toggleCollapse })
             </div>
 
             {/* Profile Info - Hidden on tablet collapsed sidebar or when collapsed */}
-            <div className={`hidden ${isCollapsed ? 'md:hidden' : 'lg:block'} flex-1 min-w-0`}>
+            <div className={`hidden ${isCollapsed ? 'md:hidden' : 'md:block'} flex-1 min-w-0`}>
               <p className="text-xs font-bold text-slate-800 dark:text-white truncate" title={user?.name}>
                 {user?.name || 'User'}
               </p>
@@ -162,7 +162,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isCollapsed = false, toggleCollapse })
             <button
               type="button"
               onClick={logout}
-              className={`hidden ${isCollapsed ? 'md:hidden' : 'lg:block'} p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white focus:outline-hidden cursor-pointer`}
+              className={`hidden ${isCollapsed ? 'md:hidden' : 'md:block'} p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white focus:outline-hidden cursor-pointer`}
               title="Logout"
               aria-label="Logout"
             >

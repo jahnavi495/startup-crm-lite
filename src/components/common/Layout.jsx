@@ -53,7 +53,7 @@ const Layout = ({ children }) => {
       />
 
       {/* 2. Main Page Container */}
-      <div className={`flex-1 flex flex-col min-w-0 pb-16 md:pb-0 transition-all duration-250 ease-in-out ${isCollapsed ? 'md:pl-20 lg:pl-20' : 'md:pl-20 lg:pl-64'
+      <div className={`flex-1 flex flex-col min-w-0 pb-16 md:pb-0 transition-all duration-250 ease-in-out ${isCollapsed ? 'md:pl-20 lg:pl-20' : 'md:pl-52 lg:pl-64'
         }`}>
 
         {/* Top Header Navigation Toolbar */}

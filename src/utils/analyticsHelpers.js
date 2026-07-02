@@ -211,26 +211,29 @@ export const getFunnelData = (leads = []) => {
   let wonCount = 0;
 
   leads.forEach((lead) => {
+    const rawStatus = lead.status || 'New';
+    const status = rawStatus === 'Meeting Scheduled' ? 'Meeting' : (rawStatus === 'Proposal Sent' ? 'Proposal' : rawStatus);
+
     // Stage 1: New (all leads)
     newCount++;
 
     // Stage 2: Contacted
-    if (lead.contactedAt || ['Contacted', 'Meeting Scheduled', 'Proposal Sent', 'Won'].includes(lead.status)) {
+    if (lead.contactedAt || ['Contacted', 'Meeting', 'Proposal', 'Won'].includes(status)) {
       contactedCount++;
     }
 
     // Stage 3: Meeting
-    if (lead.meetingAt || ['Meeting Scheduled', 'Proposal Sent', 'Won'].includes(lead.status)) {
+    if (lead.meetingAt || ['Meeting', 'Proposal', 'Won'].includes(status)) {
       meetingCount++;
     }
 
     // Stage 4: Proposal
-    if (lead.proposalAt || ['Proposal Sent', 'Won'].includes(lead.status)) {
+    if (lead.proposalAt || ['Proposal', 'Won'].includes(status)) {
       proposalCount++;
     }
 
     // Stage 5: Won
-    if (lead.wonAt || lead.status === 'Won') {
+    if (lead.wonAt || status === 'Won') {
       wonCount++;
     }
   });
