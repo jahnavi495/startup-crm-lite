@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, BarChart3, TrendingUp, LogOut, X, ChevronsLeft, ChevronsRight, Settings } from 'lucide-react';
+import { LayoutDashboard, Users, BarChart3, TrendingUp, LogOut, X, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
 /**
  * @typedef {Object} SidebarProps
@@ -38,8 +38,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isCollapsed = false, toggleCollapse })
   const navigationLinks = [
     { name: 'Dashboard', subLabel: 'Overview & KPI Metrics', path: '/', icon: LayoutDashboard },
     { name: 'Leads Management', subLabel: 'Active Opportunities Directory', path: '/leads', icon: Users },
-    { name: 'Analytics', subLabel: 'Conversion & Revenue Charts', path: '/analytics', icon: BarChart3 },
-    { name: 'Settings & Profile', subLabel: 'Account & CRM Config', path: '/settings', icon: Settings }
+    { name: 'Analytics', subLabel: 'Conversion & Revenue Charts', path: '/analytics', icon: BarChart3 }
   ];
 
   return (
@@ -61,7 +60,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isCollapsed = false, toggleCollapse })
       >
 
         {/* Brand Header */}
-        <div className={`flex ${isCollapsed ? 'flex-col justify-center py-3 gap-2.5' : 'items-center justify-between'} h-auto min-h-[64px] px-4 border-b border-slate-200 dark:border-slate-800 shrink-0`}>
+        <div className={`flex ${isCollapsed ? 'flex-col justify-center py-3 gap-2.5' : 'items-center justify-between'} h-auto min-h-16 px-4 border-b border-slate-200 dark:border-slate-800 shrink-0`}>
           <div className="flex items-center gap-2.5 mx-auto lg:mx-0">
             {/* Brand Logo - Styled as futuristic A geometry */}
             <svg viewBox="0 0 32 32" fill="none" className="w-8 h-8 text-primary shrink-0">
@@ -126,7 +125,7 @@ const Sidebar = ({ isOpen, toggleSidebar, isCollapsed = false, toggleCollapse })
                     {/* Text Labels - Hidden on tablet collapsed sidebar or when collapsed */}
                     <div className={`hidden ${isCollapsed ? 'md:hidden' : 'lg:flex'} flex-col text-left`}>
                       <span className="font-semibold text-xs leading-none">{link.name}</span>
-                      <span className={`text-[9px] mt-1 font-medium leading-none truncate max-w-[150px] ${isActive
+                      <span className={`text-[9px] mt-1 font-medium leading-none truncate max-w-37.5 ${isActive
                           ? 'text-slate-500 dark:text-slate-400'
                           : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-350'
                         }`}>

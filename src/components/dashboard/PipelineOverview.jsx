@@ -1,48 +1,45 @@
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 
-// Static constants lifted outside of the render cycle
 const STAGES = ['New', 'Contacted', 'Meeting Scheduled', 'Proposal Sent', 'Won', 'Lost'];
 
-// Tailwind BG color variants for horizontal segment bar
 const STAGE_COLORS = {
-  'New': 'bg-slate-400 dark:bg-slate-500',
-  'Contacted': 'bg-warning',
+  New: 'bg-slate-400',
+  Contacted: 'bg-warning',
   'Meeting Scheduled': 'bg-indigo-500',
   'Proposal Sent': 'bg-primary',
-  'Won': 'bg-success',
-  'Lost': 'bg-danger'
+  Won: 'bg-success',
+  Lost: 'bg-danger'
 };
 
 /**
  * @typedef {Object} Lead
- * @property {string} id - Unique lead identifier
- * @property {string} name - Contact person's name
- * @property {string} company - Organization name
- * @property {number} value - Financial opportunity value in USD
- * @property {string} stage - Active pipeline status (e.g. New, Contacted, Proposal, Won, Lost)
+ * @property {string} id - Unique lead identifier.
+ * @property {string} name - Contact person's name.
+ * @property {string} company - Organization name.
+ * @property {number} value - Financial opportunity value.
+ * @property {string} status - Pipeline status.
  */
 
 /**
  * @typedef {Object} PipelineOverviewProps
- * @property {Lead[]} leads - List of leads in active workspace
+ * @property {Lead[]} leads - List of leads displayed in the overview.
  */
 
 /**
  * PipelineOverview Component
- * Renders a segmented horizontal progress bar representing lead statuses.
- * Underneath the bar, a status legend shows lead counts, percentages, and dollar values.
- * 
+ * Displays a horizontal pipeline bar with status segments and supporting metric cards.
+ *
  * @param {PipelineOverviewProps} props
  */
 const PipelineOverview = ({ leads }) => {
   const totalLeads = leads.length;
 
-  // Aggregate stats across all stages
   const stageStats = useMemo(() => {
     return STAGES.map((stage) => {
-      const stageLeads = leads.filter((l) => l.status === stage);
-      const value = stageLeads.reduce((sum, l) => sum + l.value, 0);
+      const stageLeads = leads.filter((lead) => lead.status === stage);
+      const value = stageLeads.reduce((sum, lead) => sum + lead.value, 0);
       const percentage = totalLeads > 0 ? (stageLeads.length / totalLeads) * 100 : 0;
+
       return {
         name: stage,
         count: stageLeads.length,
@@ -52,68 +49,56 @@ const PipelineOverview = ({ leads }) => {
     });
   }, [leads, totalLeads]);
 
-  // Formatting utility for currency
-  const formatCurrency = (val) => {
-    return new Intl.NumberFormat('en-US', {
+  const formatCurrency = (amount) =>
+    new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       maximumFractionDigits: 0
-    }).format(val);
-  };
+    }).format(amount);
 
   return (
-    <div className="p-5 bg-white dark:bg-[#1C1C1C] border border-slate-100 dark:border-slate-800/40 rounded-2xl shadow-xs">
-      <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-        Pipeline Segment Summary
-      </h3>
-      <p className="text-[11px] text-slate-450 dark:text-slate-500 mt-1 mb-5 leading-relaxed">
-        Visual representation of active opportunities across pipeline stages.
-      </p>
-
-      {totalLeads > 0 ? (
-        <div className="space-y-5">
-          {/* Horizontal Progress Bar representing percentages of each stage */}
-          <div className="h-3 w-full flex rounded-full bg-slate-100 dark:bg-slate-850 overflow-hidden">
-            {stageStats.map((stat) => {
-              if (stat.count === 0) return null;
-              return (
-                <div
-                  key={stat.name}
-                  style={{ width: `${stat.percentage}%` }}
-                  className={`${STAGE_COLORS[stat.name]} h-full transition-opacity duration-150 hover:opacity-95`}
-                  title={`${stat.name}: ${stat.count} leads (${Math.round(stat.percentage)}%)`}
-                />
-              );
-            })}
-          </div>
-
-          {/* Sub-grid listing stage count details and cumulative values */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 pt-1">
-            {stageStats.map((stat) => {
-              return (
-                <div key={stat.name} className="space-y-1">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold">
-                    <span className={`w-2 h-2 rounded-full ${STAGE_COLORS[stat.name]}`} />
-                    <span className="text-slate-700 dark:text-slate-350 truncate">{stat.name}</span>
-                  </div>
-                  <p className="text-xs font-bold text-slate-900 dark:text-white pl-3.5">
-                    {stat.count} <span className="text-[10px] text-slate-400 font-medium">({Math.round(stat.percentage)}%)</span>
-                  </p>
-                  <p className="text-[9px] text-slate-400 dark:text-slate-500 pl-3.5 font-bold">
-                    {formatCurrency(stat.value)}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      ) : (
-        <div className="py-6 text-center">
-          <p className="text-slate-500 dark:text-slate-400 text-xs">
-            No opportunities registered in current filters.
+    <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+            Pipeline Overview
           </p>
+          <h3 className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">
+            Stage distribution across the funnel
+          </h3>
         </div>
-      )}
+        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+          {totalLeads} opportunities
+        </span>
+      </div>
+
+      <div className="mt-5 flex h-3 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+        {stageStats.map((stat) => {
+          if (stat.count === 0) return null;
+          return (
+            <div
+              key={stat.name}
+              className={`${STAGE_COLORS[stat.name]} h-full`}
+              style={{ width: `${stat.percentage}%` }}
+              title={`${stat.name}: ${stat.count} leads`}
+            />
+          );
+        })}
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {stageStats.map((stat) => (
+          <div key={stat.name} className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-800/60">
+            <div className="flex items-center gap-2">
+              <span className={`h-2.5 w-2.5 rounded-full ${STAGE_COLORS[stat.name]}`} />
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{stat.name}</span>
+            </div>
+            <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-white">{stat.count}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{Math.round(stat.percentage)}% of pipeline</p>
+            <p className="mt-1 text-xs font-medium text-slate-600 dark:text-slate-300">{formatCurrency(stat.value)}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

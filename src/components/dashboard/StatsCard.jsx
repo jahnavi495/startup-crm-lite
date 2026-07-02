@@ -2,55 +2,45 @@ import React from 'react';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 
 /**
- * StatsCard Component
- * Displays a single key performance indicator (KPI) metric box.
- * Alternates colors in light mode (Blue/Black/Blue/Black) and becomes white in dark mode.
+ * @typedef {Object} StatsCardProps
+ * @property {string} title - KPI label shown above the metric.
+ * @property {string|number} value - Main numeric or text metric.
+ * @property {React.ElementType} icon - Lucide icon component.
+ * @property {number} change - Percentage change vs the previous month.
+ * @property {string} color - Tailwind color token used for the card accent.
  */
-const StatsCard = ({ index = 0, title, value, icon: Icon, change }) => {
+
+/**
+ * StatsCard Component
+ * Renders a premium KPI card with an icon, a large value, and a change indicator.
+ *
+ * @param {StatsCardProps} props
+ */
+const StatsCard = ({ title, value, icon: Icon, change, color = 'bg-primary' }) => {
   const isPositive = change >= 0;
-  const isBlue = index % 2 === 0;
-
-  // Class mapping for Figma design rules
-  const cardBgClass = isBlue
-    ? 'bg-[#007AFF] text-white dark:bg-white dark:text-slate-900'
-    : 'bg-[#1C1C1C] text-white dark:bg-white dark:text-slate-900';
-
-  const iconBgClass = 'bg-white/15 text-white dark:bg-slate-100 dark:text-slate-900';
-
-  const trendTagClass = isPositive
-    ? 'text-white dark:text-emerald-600'
-    : 'text-white dark:text-red-500';
-
-  const subTextClass = 'text-white/70 dark:text-slate-400';
 
   return (
-    <div className={`p-5 border border-transparent dark:border-slate-205/50 rounded-2xl shadow-xs transition-all duration-200 hover:-translate-y-0.5 flex flex-col justify-between ${cardBgClass}`}>
-      {/* Top row: metric title & accent icon container */}
-      <div className="flex items-center justify-between">
-        <span className="text-[10px] font-bold uppercase tracking-wider select-none opacity-90">
-          {title}
-        </span>
-        <div className={`p-2 rounded-xl ${iconBgClass}`}>
-          <Icon size={16} strokeWidth={2} />
+    <div className={`rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)] transition-all duration-200 hover:-translate-y-1 dark:border-slate-800 dark:bg-slate-900`}> 
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+            {title}
+          </p>
+          <p className="mt-3 text-2xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
+            {value}
+          </p>
+        </div>
+        <div className={`rounded-2xl p-2.5 ${color} text-white shadow-sm`}>
+          <Icon className="h-5 w-5" />
         </div>
       </div>
-      
-      {/* Big KPI Metric number */}
-      <div className="mt-4">
-        <h4 className="text-2xl font-black tracking-tight sm:text-3xl">
-          {value}
-        </h4>
-      </div>
 
-      {/* Percentage change trend block */}
-      <div className="mt-3.5 flex items-center gap-1.5 text-xs font-semibold">
-        <span className={`inline-flex items-center gap-0.5 ${trendTagClass}`}>
-          {isPositive ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
+      <div className="mt-4 flex items-center gap-2 text-sm font-medium">
+        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 ${isPositive ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400'}`}>
+          {isPositive ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
           <span>{isPositive ? '+' : ''}{change}%</span>
         </span>
-        <span className={`text-[10px] font-medium ${subTextClass}`}>
-          vs last month
-        </span>
+        <span className="text-slate-500 dark:text-slate-400">vs last month</span>
       </div>
     </div>
   );

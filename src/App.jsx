@@ -1,33 +1,24 @@
 import React from 'react';
-import { HashRouter } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AppRoutes } from './routes';
 
-// Redirect direct path entry without a hash to its corresponding HashRouter route path
-const pathname = window.location.pathname;
-if (pathname !== '/' && !pathname.endsWith('/index.html') && !window.location.hash) {
-  const targetHash = '#' + pathname + window.location.search;
-  window.location.replace(window.location.origin + '/' + targetHash);
-}
-
 /**
  * App Component
- * The central root assembly for AuraCRM.
- * - Wraps the layout in the HTML5 HashRouter to handle router navigation paths.
- * - Renders the AppRoutes which handles protected and public route layouts.
+ * The root assembly for the Startup CRM Lite experience.
+ * - Wraps the app in BrowserRouter so the URL matches the current CRM page.
+ * - Renders the global toast container and the lazy-loaded route tree.
  */
 const App = () => {
   return (
-    // HashRouter links URLs to specific router configurations via hash pathing, preventing page reload 404s
-    <HashRouter>
-      
-      {/* Toast notifications popup layer */}
+    // BrowserRouter keeps navigation tied to the browser URL for clean Vite routing.
+    <BrowserRouter>
+      {/* Toast notifications appear globally above the app shell. */}
       <Toaster position="top-right" />
-      
-      {/* AppRoutes renders the lazy loaded content pages based on routes */}
+
+      {/* AppRoutes loads the active CRM page lazily and mounts it for the current path. */}
       <AppRoutes />
-      
-    </HashRouter>
+    </BrowserRouter>
   );
 };
 
