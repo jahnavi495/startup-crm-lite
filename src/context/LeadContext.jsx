@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { sampleLeads } from '../data/sampleLeads';
+import useLocalStorage from '../hooks/useLocalStorage';
 
 /**
  * shape definition of the Lead object
@@ -31,44 +32,26 @@ const LeadContext = createContext(undefined);
 export const LeadProvider = ({ children }) => {
   const { user, isAuthenticated } = useAuth();
 
-  const [leads, setLeads] = useState([]);
+  const [leads, setLeads] = useLocalStorage('startup-crm-leads', sampleLeads);
   const [notifications, setNotifications] = useState([]);
   const [currency, setCurrencyState] = useState('₹');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Dynamically load leads, notifications and currency when the user session changes
+  // Dynamically load notifications and currency when the user session changes
   useEffect(() => {
     if (!isAuthenticated || !user) {
-      setLeads([]);
       setNotifications([]);
       setCurrencyState('₹');
       return;
     }
 
     const emailKey = user.email.toLowerCase();
-    const leadsKey = `startup-crm-leads-${emailKey}`;
     const notifsKey = `startup-crm-notifications-${emailKey}`;
     const currencyKey = `startup-crm-currency-${emailKey}`;
 
     // Load currency preference
     const storedCurrency = localStorage.getItem(currencyKey) || '₹';
     setCurrencyState(storedCurrency);
-
-    // Load leads
-    try {
-      const storedLeads = localStorage.getItem(leadsKey);
-      if (storedLeads && JSON.parse(storedLeads).length > 0) {
-        setLeads(JSON.parse(storedLeads));
-      } else {
-        // Pre-populate for all accounts on initialization
-        const initialLeads = sampleLeads;
-        localStorage.setItem(leadsKey, JSON.stringify(initialLeads));
-        setLeads(initialLeads);
-      }
-    } catch (e) {
-      console.error('Failed to parse leads from local storage:', e);
-      setLeads([]);
-    }
 
     // Load notifications
     try {
@@ -86,13 +69,9 @@ export const LeadProvider = ({ children }) => {
   }, [user, isAuthenticated]);
 
   /**
-   * Helper: Saves leads to local storage under user-specific key.
+   * Helper: Saves leads to local storage under global key.
    */
   const saveLeads = (updatedLeads) => {
-    if (!user) return;
-    const emailKey = user.email.toLowerCase();
-    const leadsKey = `startup-crm-leads-${emailKey}`;
-    localStorage.setItem(leadsKey, JSON.stringify(updatedLeads));
     setLeads(updatedLeads);
   };
 

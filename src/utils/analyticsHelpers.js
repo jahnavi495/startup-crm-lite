@@ -36,7 +36,8 @@ export const getStatusDistribution = (leads = []) => {
   
   const counts = {};
   leads.forEach((lead) => {
-    const status = lead.status || 'New';
+    const rawStatus = lead.status || 'New';
+    const status = rawStatus === 'Meeting Scheduled' ? 'Meeting' : (rawStatus === 'Proposal Sent' ? 'Proposal' : rawStatus);
     counts[status] = (counts[status] || 0) + 1;
   });
 
