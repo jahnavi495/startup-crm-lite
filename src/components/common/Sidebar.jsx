@@ -62,13 +62,21 @@ const Sidebar = ({ isOpen, toggleSidebar, isCollapsed = false, toggleCollapse })
         {/* Brand Header */}
         <div className={`flex ${isCollapsed ? 'flex-col justify-center py-3 gap-2.5' : 'items-center justify-between'} h-auto min-h-16 px-4 border-b border-slate-200 dark:border-slate-800 shrink-0`}>
           <div className="flex items-center gap-2.5 mx-auto lg:mx-0">
-            {/* Brand Logo - Styled as futuristic A geometry */}
-            <svg viewBox="0 0 32 32" fill="none" className="w-8 h-8 text-primary shrink-0">
-              <g stroke="currentColor" strokeWidth="2.8" strokeLinejoin="round" strokeLinecap="round">
-                <path d="M 6 26 L 18 5 L 21 11" />
-                <path d="M 22.5 14.5 L 27 26" />
-                <path d="M 8 20 L 29 11 M 29 11 L 23 8 M 29 11 L 26 17" />
-              </g>
+            {/* Brand Logo - Styled as connected growth nodes */}
+            <svg viewBox="0 0 32 32" fill="none" className="w-8 h-8 shrink-0">
+              <defs>
+                <linearGradient id="logoLineGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#6366F1" />
+                  <stop offset="50%" stop-color="#3B82F6" />
+                  <stop offset="100%" stop-color="#22C55E" />
+                </linearGradient>
+              </defs>
+              <path d="M 6 24 L 13 15 L 20 20 L 27 9" stroke="url(#logoLineGrad)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M 21 9 H 27 V 15" stroke="#22C55E" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" />
+              <circle cx="6" cy="24" r="2.8" fill="#6366F1" stroke="currentColor" stroke-width="1" className="text-white dark:text-slate-900" />
+              <circle cx="13" cy="15" r="2.8" fill="#3B82F6" stroke="currentColor" stroke-width="1" className="text-white dark:text-slate-900" />
+              <circle cx="20" cy="20" r="2.8" fill="#F59E0B" stroke="currentColor" stroke-width="1" className="text-white dark:text-slate-900" />
+              <circle cx="27" cy="9" r="2.8" fill="#22C55E" stroke="currentColor" stroke-width="1" className="text-white dark:text-slate-900" />
             </svg>
 
             {/* Brand details - Hidden on tablet collapsed sidebar or when collapsed */}
