@@ -33,6 +33,7 @@ router
         .optional()
         .isIn(['Website', 'Referral', 'LinkedIn', 'Cold Call', 'Email Campaign', 'Other'])
         .withMessage('Source channel is invalid.'),
+      body('notes').optional().isLength({ max: 1000 }).withMessage('Notes cannot exceed 1000 characters.'),
       validate,
     ],
     createLead
@@ -56,6 +57,7 @@ router
         .optional()
         .isIn(['Website', 'Referral', 'LinkedIn', 'Cold Call', 'Email Campaign', 'Other'])
         .withMessage('Source channel is invalid.'),
+      body('notes').optional().isLength({ max: 1000 }).withMessage('Notes cannot exceed 1000 characters.'),
       validate,
     ],
     updateLead
