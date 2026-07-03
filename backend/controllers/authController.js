@@ -72,7 +72,7 @@ export const login = async (req, res, next) => {
     }
 
     // Verify password match
-    const isMatch = await user.matchPassword(password);
+    const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return errorResponse(res, 'Invalid credentials provided.', 401);
     }
