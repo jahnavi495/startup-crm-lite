@@ -2,71 +2,72 @@ import mongoose from 'mongoose';
 
 /**
  * Mongoose Schema for the Lead model.
- * Captures lifecycle stages, origins, notes, and user associations for CRM leads.
+ * Defines structure, validations, virtual fields, and indexes for CRM lead tracking.
  * 
  * @type {mongoose.Schema}
  */
 export const LeadSchema = new mongoose.Schema(
   {
     /**
-     * The primary contact person's name.
-     * Required, trimmed, between 2 and 100 characters.
+     * The name of the primary contact person for the lead.
+     * Required field, trimmed, must be between 2 and 100 characters long.
      */
     name: {
       type: String,
-      required: [true, 'Contact name is required.'],
+      required: [true, 'Name is required.'],
       trim: true,
-      minlength: [2, 'Contact name must be at least 2 characters long.'],
-      maxlength: [100, 'Contact name cannot exceed 100 characters.'],
+      minLength: [2, 'Name must be at least 2 characters long.'],
+      maxLength: [100, 'Name cannot exceed 100 characters.'],
     },
     /**
-     * The organization or company associated with the lead.
-     * Required and trimmed.
+     * The company or organization name associated with the lead.
+     * Required field, trimmed.
      */
     company: {
       type: String,
-      required: [true, 'Company name is required.'],
+      required: [true, 'Company is required.'],
       trim: true,
     },
     /**
-     * The primary email address for contacting the lead.
-     * Required, trimmed, and validated against standard email structure pattern.
+     * The contact email address for the lead.
+     * Required field, trimmed, and validated against standard email format.
      */
     email: {
       type: String,
-      required: [true, 'Email address is required.'],
+      required: [true, 'Email is required.'],
       trim: true,
       validate: {
         validator: function (v) {
+          // Regular expression to validate standard email format
           return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
         },
         message: 'Email must be a valid email address.',
       },
     },
     /**
-     * The telephone or mobile number for contacting the lead.
-     * Optional and trimmed.
+     * The contact phone number for the lead.
+     * Optional field, trimmed.
      */
     phone: {
       type: String,
       trim: true,
-      default: '',
     },
     /**
-     * The value estimate for the lead in the pipeline (opportunity size).
-     * Defaults to 0.
+     * The estimated monetary value (deal size) of the lead.
+     * Optional field, defaults to 0. Retained to preserve integration with 
+     * analytics charts and pipeline overview calculations.
      */
     value: {
       type: Number,
       default: 0,
     },
     /**
-     * The stage status of the lead in the sales pipeline.
+     * The current lifecycle status stage of the lead.
      * Enforced by enum values to align precisely with frontend constants.
+     * Defaults to 'New'.
      */
     status: {
       type: String,
-      required: [true, 'Status stage is required.'],
       enum: {
         values: ['New', 'Contacted', 'Meeting Scheduled', 'Proposal Sent', 'Won', 'Lost'],
         message: 'Status must be one of: New, Contacted, Meeting Scheduled, Proposal Sent, Won, Lost.',
@@ -74,12 +75,12 @@ export const LeadSchema = new mongoose.Schema(
       default: 'New',
     },
     /**
-     * The origin source channel where the lead was generated.
+     * The acquisition source where the lead originated.
      * Enforced by enum values to align precisely with frontend constants.
+     * Defaults to 'Website'.
      */
     source: {
       type: String,
-      required: [true, 'Source channel is required.'],
       enum: {
         values: ['Website', 'Referral', 'LinkedIn', 'Cold Call', 'Email Campaign', 'Other'],
         message: 'Source must be one of: Website, Referral, LinkedIn, Cold Call, Email Campaign, Other.',
@@ -87,26 +88,25 @@ export const LeadSchema = new mongoose.Schema(
       default: 'Website',
     },
     /**
-     * Additional notes or descriptions about the lead interactions.
-     * Optional, up to 1000 characters.
+     * Additional notes, details, or descriptions from communication logs.
+     * Optional field, maximum length of 1000 characters.
      */
     notes: {
       type: String,
-      trim: true,
-      maxlength: [1000, 'Notes cannot exceed 1000 characters.'],
-      default: '',
+      maxLength: [1000, 'Notes cannot exceed 1000 characters.'],
     },
     /**
-     * The owner who created and manages the lead.
-     * Links back to the User model, required.
+     * The user ID of the owner who created and manages this lead.
+     * Required reference pointing to the User model.
      */
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: [true, 'Lead owner is required.'],
+      required: [true, 'Owner is required.'],
     },
   },
   {
+    // Automatically manage createdAt and updatedAt timestamps
     timestamps: true,
     // Enable virtual fields to be included in JSON and object serialization
     toJSON: { virtuals: true },
@@ -116,16 +116,21 @@ export const LeadSchema = new mongoose.Schema(
 
 // --- Indexes ---
 
-// Compound index on owner and status for optimized pipeline listing and stage-based filtering
+// Compound index on (owner, status) for fast filtered queries in the sales pipeline
 LeadSchema.index({ owner: 1, status: 1 });
 
-// Single-field index on email for optimized search and contact lookups
+// Index on email for fast contact/lead lookups
 LeadSchema.index({ email: 1 });
 
-// --- Virtuals ---
+// Compound indexes for pagination and chronologically sorted queries
+LeadSchema.index({ owner: 1, createdAt: -1 });
+LeadSchema.index({ owner: 1, status: 1, createdAt: -1 });
+LeadSchema.index({ owner: 1, source: 1, createdAt: -1 });
+
+// --- Virtual Fields ---
 
 /**
- * Virtual field 'age' calculating the number of days since the lead creation timestamp.
+ * Virtual field 'age' calculating the number of days since the lead was created.
  * Useful for pipeline stagnation analytics.
  * 
  * @name age

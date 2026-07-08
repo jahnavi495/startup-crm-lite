@@ -1,58 +1,77 @@
 import { errorResponse } from '../utils/apiResponse.js';
 
 /**
- * Global centralized Express error handler middleware
+ * Global Express centralized error handling middleware.
+ * Formats errors for Mongoose validation checks, database casting, duplicate key constraints,
+ * and JWT validation issues into consistent API responses.
+ * 
+ * @param {Object} err - Error object thrown in application logic
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function callback
+ * @returns {Object} Express response object containing formatted error payload
  */
 export const errorHandler = (err, req, res, next) => {
-  // Log the stack trace in development mode
-  if (process.env.NODE_ENV !== 'production') {
-    console.error(err.stack || err);
-  }
-
-  let statusCode = err.statusCode || 500;
-  let message = err.message || 'Internal Server Error';
+  let statusCode = 500;
+  let message = 'Server error';
   let errors = null;
 
-  // 1. Mongoose Bad ObjectId CastError
-  if (err.name === 'CastError') {
-    statusCode = 404;
-    message = `Resource not found with ID: ${err.value}`;
-  }
-
-  // 2. Mongoose Duplicate Key Error (e.g. unique field breach)
-  if (err.code === 11000) {
-    statusCode = 400;
-    message = 'Duplicate database field value entered. A record with this value already exists.';
-    // Extract key details
-    if (err.keyValue) {
-      errors = Object.keys(err.keyValue).map((key) => ({
-        field: key,
-        message: `Value '${err.keyValue[key]}' is already in use.`,
-      }));
-    }
-  }
-
-  // 3. Mongoose Validation Error
+  // 1. Mongoose ValidationError (validation failed for schema fields)
   if (err.name === 'ValidationError') {
     statusCode = 400;
-    message = 'Database validation check failed.';
+    message = 'Validation Check Failed';
+    // Format error messages field-by-field
     errors = Object.values(err.errors).map((val) => ({
       field: val.path,
       message: val.message,
     }));
   }
 
-  // 4. JWT JsonWebTokenError
-  if (err.name === 'JsonWebTokenError') {
-    statusCode = 401;
-    message = 'Authentication token verification failed. Access denied.';
+  // 2. Mongoose CastError (invalid ObjectId format)
+  else if (err.name === 'CastError') {
+    statusCode = 404;
+    message = 'Resource not found';
   }
 
-  // 5. JWT TokenExpiredError
-  if (err.name === 'TokenExpiredError') {
-    statusCode = 401;
-    message = 'Authentication token has expired. Please re-authenticate.';
+  // 3. MongoDB duplicate key error (code 11000)
+  else if (err.code === 11000) {
+    statusCode = 409;
+    message = 'Email already exists';
+    // Extract key details if available
+    if (err.keyValue) {
+      errors = err.keyValue;
+    }
   }
 
-  return errorResponse(res, message, statusCode, errors);
+  // 4. JWT Verification Errors
+  else if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+    statusCode = 401;
+    message = err.name === 'TokenExpiredError' 
+      ? 'Authentication token expired' 
+      : 'Authentication token is invalid';
+  }
+
+  // Log full error object in console for developer debugging in non-production environments
+  if (process.env.NODE_ENV !== 'production') {
+    console.error('Error details caught by errorHandler:', err);
+  }
+
+  // Assemble final JSON response payload
+  const responsePayload = {
+    success: false,
+    message,
+  };
+
+  if (errors !== null) {
+    responsePayload.errors = errors;
+  }
+
+  // Conditionally append stack trace in development mode
+  if (process.env.NODE_ENV === 'development') {
+    responsePayload.stack = err.stack;
+  }
+
+  return res.status(statusCode).json(responsePayload);
 };
+
+export default errorHandler;
