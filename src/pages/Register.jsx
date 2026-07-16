@@ -1,222 +1,261 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { User, Mail, Lock, UserPlus, AlertCircle } from 'lucide-react';
+import DarkModeToggle from '../components/common/DarkModeToggle';
+import ShimmerButton from '../components/common/ShimmerButton';
+import { 
+  Mail, 
+  Lock, 
+  User,
+  LogIn, 
+  AlertCircle, 
+  Eye, 
+  EyeOff, 
+  CheckCircle2,
+  Users,
+  TrendingUp,
+  MessageCircle,
+  Award,
+  Star
+} from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import Logo from '../components/common/Logo';
+import useDocumentMetadata from '../hooks/useDocumentMetadata';
 
-/**
- * Register Page Component
- * Renders a premium signup interface.
- * Implements client-side checks for password length and confirmations,
- * and handles registration API requests.
- */
 const Register = () => {
-  const { register } = useAuth();
   const navigate = useNavigate();
 
-  // Form states
+  useDocumentMetadata(
+    'Create Free Account | StartupCRM',
+    'Get started with StartupCRM to qualify opportunity leads, manage contacts, track pipelines, and evaluate conversion statistics.'
+  );
+  const { register } = useAuth();
+  
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    // 1. Password length validation
-    if (password.length < 6) {
-      const msg = 'Password must be at least 6 characters long.';
-      setError(msg);
-      toast.error(msg, {
-        style: { background: '#EF4444', color: '#FFFFFF', fontWeight: 'bold' }
-      });
-      return;
-    }
-
-    // 2. Password matching validation
+    // Client-side validations
     if (password !== confirmPassword) {
-      const msg = 'Passwords do not match.';
-      setError(msg);
-      toast.error(msg, {
-        style: { background: '#EF4444', color: '#FFFFFF', fontWeight: 'bold' }
-      });
+      setError('Passwords do not match');
       return;
     }
 
-    setSubmitting(true);
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
+    setIsLoading(true);
+
     try {
       await register(name, email, password);
-      toast.success('Registration completed! Welcome to CRM Lite.', {
-        style: { background: '#22C55E', color: '#FFFFFF', fontWeight: 'bold' }
+      toast.success('Registration successful! Welcome to your workspace.', {
+        style: {
+          background: '#22C55E',
+          color: '#FFFFFF',
+          fontWeight: 'bold',
+        },
+        duration: 4000,
       });
-      navigate('/');
+      navigate('/dashboard');
     } catch (err) {
-      console.error('Registration submit error:', err);
-      const serverMsg = err.response?.data?.message || 'Email is already registered or invalid.';
-      setError(serverMsg);
-      toast.error(serverMsg, {
-        style: { background: '#EF4444', color: '#FFFFFF', fontWeight: 'bold' }
+      const errorMsg = err.response?.data?.message || err.message || 'Registration failed.';
+      setError(errorMsg);
+      toast.error(errorMsg, {
+        style: {
+          background: '#EF4444',
+          color: '#FFFFFF',
+          fontWeight: 'bold',
+        },
+        duration: 3000,
       });
     } finally {
-      setSubmitting(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="relative min-h-[90vh] flex flex-col items-center justify-center px-4 overflow-hidden py-12">
-      {/* Floating glowing background mesh */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden select-none -z-10">
-        <div className="absolute -top-20 -left-20 w-[450px] h-[450px] rounded-full bg-primary/8 dark:bg-primary/5 blur-3xl" />
-        <div className="absolute -bottom-20 -right-20 w-[450px] h-[450px] rounded-full bg-blue-500/8 dark:bg-blue-500/5 blur-3xl" />
-      </div>
-
-      <div className="w-full max-w-md">
-        {/* Header Section */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-blue-550/10 dark:bg-blue-500/20 text-primary mb-4 shadow-xs">
-            <UserPlus className="h-6 w-6" />
-          </div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">Startup CRM Lite</p>
-          <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-            Create your account
-          </h2>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Start tracking opportunities and pipelines.
-          </p>
+    <div className="min-h-screen w-full flex bg-gradient-to-tr from-border/50 via-bg to-border dark:from-bg dark:via-surface dark:to-card relative overflow-x-hidden transition-colors duration-200 justify-center items-center">
+      
+      {/* USER ACTION AREA - Centered on page */}
+      <div className="w-full max-w-md p-4 sm:p-6 lg:p-8 relative">
+        
+        {/* Dark / Light Toggle */}
+        <div className="fixed top-6 right-6 z-50">
+          <DarkModeToggle />
         </div>
 
-        {/* Register Card Panel */}
-        <div className="bg-white dark:bg-[#1C1C1C] border border-slate-100 dark:border-slate-800/40 rounded-3xl p-8 shadow-[0_12px_40px_rgba(15,23,42,0.06)]">
+        {/* Ambient glows */}
+        <div className="absolute top-1/6 right-1/6 w-96 h-96 rounded-full bg-blue-300/20 dark:bg-blue-600/10 blur-[120px] pointer-events-none animate-float-slow -z-10" />
+        <div className="absolute bottom-1/6 left-1/6 w-96 h-96 rounded-full bg-purple-300/15 dark:bg-purple-600/8 blur-[120px] pointer-events-none animate-float-reverse -z-10" />
+
+        {/* Register frosted glass card */}
+        <div className="w-full glass-card p-6 sm:p-8 rounded-3xl shadow-2xl relative z-10 my-auto animate-fade-in">
+          
+          {/* Header */}
+          <div className="flex flex-col items-center text-center mb-6 select-none">
+            <div className="w-12 h-12 mb-3 flex items-center justify-center">
+              <Logo className="w-11 h-11 text-primary" />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
+              Create workspace
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Start managing your CRM workspace in seconds.
+            </p>
+          </div>
+
+          {/* Inline alert */}
           {error && (
-            <div className="mb-6 flex items-start gap-2.5 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30 text-xs sm:text-sm text-red-650 dark:text-red-400 animate-shake">
-              <AlertCircle size={18} className="shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold">Validation error</p>
-                <p className="mt-0.5 opacity-90">{error}</p>
-              </div>
+            <div className="flex items-start gap-2.5 p-3.5 bg-red-50/50 dark:bg-red-950/20 border border-red-200/40 dark:border-red-900/30 text-red-600 dark:text-red-400 rounded-xl text-xs mb-6 animate-fade-in text-left">
+              <AlertCircle size={15} className="shrink-0 mt-0.5" />
+              <span>{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Full Name */}
-            <div>
-              <label htmlFor="name" className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4 text-left">
+            <div className="space-y-1">
+              <label htmlFor="name" className="block text-[9px] font-extrabold uppercase tracking-wider text-slate-450 dark:text-slate-300">
                 Full Name
               </label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 pointer-events-none">
-                  <User size={17} />
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 dark:text-slate-500 z-10 pointer-events-none">
+                  <User size={15} />
                 </span>
                 <input
                   id="name"
                   type="text"
                   required
+                  placeholder="John Doe"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="John Doe"
-                  className="block w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:outline-hidden focus:border-primary focus:ring-1 focus:ring-primary text-slate-900 dark:text-white transition-all duration-150"
+                  className="block w-full pl-10.5 pr-4 py-2.5 text-xs rounded-xl glass-input text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-hidden"
                 />
               </div>
             </div>
 
-            {/* Email Address */}
-            <div>
-              <label htmlFor="email" className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+            <div className="space-y-1">
+              <label htmlFor="email" className="block text-[9px] font-extrabold uppercase tracking-wider text-slate-450 dark:text-slate-300">
                 Email Address
               </label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 pointer-events-none">
-                  <Mail size={17} />
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 dark:text-slate-500 z-10 pointer-events-none">
+                  <Mail size={15} />
                 </span>
                 <input
                   id="email"
                   type="email"
                   required
+                  placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="john.doe@example.com"
-                  className="block w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:outline-hidden focus:border-primary focus:ring-1 focus:ring-primary text-slate-900 dark:text-white transition-all duration-150"
+                  className="block w-full pl-10.5 pr-4 py-2.5 text-xs rounded-xl glass-input text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-hidden"
                 />
               </div>
             </div>
 
-            {/* Password */}
-            <div>
-              <label htmlFor="password" className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 pointer-events-none">
-                  <Lock size={17} />
-                </span>
-                <input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="block w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:outline-hidden focus:border-primary focus:ring-1 focus:ring-primary text-slate-900 dark:text-white transition-all duration-150"
-                />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label htmlFor="password" className="block text-[9px] font-extrabold uppercase tracking-wider text-slate-450 dark:text-slate-300">
+                  Password
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 dark:text-slate-500 z-10 pointer-events-none">
+                    <Lock size={15} />
+                  </span>
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    placeholder="Min 6 chars"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="block w-full pl-10.5 pr-10 py-2.5 text-xs rounded-xl glass-input text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-650 dark:text-slate-500 dark:hover:text-slate-300 focus:outline-hidden cursor-pointer z-10"
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label htmlFor="confirmPassword" className="block text-[9px] font-extrabold uppercase tracking-wider text-slate-450 dark:text-slate-300">
+                  Confirm
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 dark:text-slate-500 z-10 pointer-events-none">
+                    <Lock size={15} />
+                  </span>
+                  <input
+                    id="confirmPassword"
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    placeholder="Repeat password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="block w-full pl-10.5 pr-10 py-2.5 text-xs rounded-xl glass-input text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-650 dark:text-slate-500 dark:hover:text-slate-300 focus:outline-hidden cursor-pointer z-10"
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* Confirm Password */}
-            <div>
-              <label htmlFor="confirmPassword" className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                Confirm Password
-              </label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 pointer-events-none">
-                  <Lock size={17} />
-                </span>
-                <input
-                  id="confirmPassword"
-                  type="password"
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="block w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:outline-hidden focus:border-primary focus:ring-1 focus:ring-primary text-slate-900 dark:text-white transition-all duration-150"
-                />
-              </div>
-            </div>
-
-            {/* Submit Button */}
-            <button
+            <ShimmerButton
               type="submit"
-              disabled={submitting}
-              className="flex items-center justify-center gap-2 w-full mt-6 px-4 py-2.5 text-sm font-semibold text-white bg-primary hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs cursor-pointer transition-all duration-150 active:scale-98 focus:outline-hidden disabled:opacity-60 disabled:pointer-events-none"
+              disabled={isLoading}
+              className="w-full mt-2 border border-blue-400/20 shadow-md"
             >
-              {submitting ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              {isLoading ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               ) : (
                 <>
+                  <LogIn size={15} />
                   <span>Create Account</span>
-                  <UserPlus size={16} />
                 </>
               )}
-            </button>
+            </ShimmerButton>
           </form>
-        </div>
 
-        {/* Footer Link */}
-        <p className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
-          Already have an account?{' '}
-          <Link
-            to="/login"
-            className="font-semibold text-primary hover:underline hover:text-blue-600 dark:hover:text-blue-400"
-          >
-            Sign in
-          </Link>
-        </p>
+
+
+          {/* Link to login page */}
+          <div className="mt-6 text-center text-xs">
+            <span className="text-slate-500">Already registered? </span>
+            <Link to="/login" className="font-bold text-primary hover:underline">
+              Sign In
+            </Link>
+          </div>
+
+
+
+        </div>
       </div>
+
     </div>
   );
 };
 
 export default Register;
+

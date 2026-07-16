@@ -1,11 +1,11 @@
-
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Users, BarChart3, LogOut } from 'lucide-react';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import AddLeadModal from '../leads/AddLeadModal';
 import useLocalStorage from '../../hooks/useLocalStorage';
+import { useAuth } from '../../context/AuthContext';
 
 /**
  * Layout Component
@@ -19,6 +19,8 @@ import useLocalStorage from '../../hooks/useLocalStorage';
  * - children (React.ReactNode): Router pages inside the layout
  */
 const Layout = ({ children }) => {
+  const { logout } = useAuth();
+
   // Mobile sidebar drawer display toggle state
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -36,13 +38,15 @@ const Layout = ({ children }) => {
 
   // Bottom Navigation links definition for Mobile viewports
   const bottomNavLinks = [
-    { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Leads', path: '/leads', icon: Users },
     { name: 'Analytics', path: '/analytics', icon: BarChart3 }
   ];
 
   return (
-    <div className="min-h-screen flex bg-bg dark:bg-brand-dark transition-colors duration-200">
+    <div className="h-screen flex bg-bg dark:bg-bg relative overflow-hidden transition-colors duration-200">
+
+
 
       {/* 1. Left Sidebar (tablet + desktop) */}
       <Sidebar
@@ -53,7 +57,7 @@ const Layout = ({ children }) => {
       />
 
       {/* 2. Main Page Container */}
-      <div className={`flex-1 flex flex-col min-w-0 pb-16 md:pb-0 transition-all duration-250 ease-in-out ${isCollapsed ? 'md:pl-20 lg:pl-20' : 'md:pl-52 lg:pl-64'
+      <div className={`flex-1 flex flex-col min-w-0 pb-16 md:pb-0 transition-all duration-250 ease-in-out relative z-10 ${isCollapsed ? 'md:pl-20 lg:pl-20' : 'md:pl-20 lg:pl-64'
         }`}>
 
         {/* Top Header Navigation Toolbar */}
@@ -70,7 +74,7 @@ const Layout = ({ children }) => {
       </div>
 
       {/* 3. Mobile Bottom Navigation Bar (Visible only on mobile devices) */}
-      <nav className="fixed bottom-0 left-0 right-0 h-16 bg-white dark:bg-card-dark border-t border-slate-200 dark:border-border-dark flex items-center justify-around z-40 md:hidden shadow-[0_-2px_10px_rgba(0,0,0,0.05)] transition-colors">
+      <nav className="fixed bottom-0 left-0 right-0 h-16 bg-surface/70 dark:bg-surface/75 backdrop-blur-xl border-t border-border/50 dark:border-border/10 flex items-center justify-around z-40 md:hidden shadow-[0_-8px_30px_rgba(0,0,0,0.03)] dark:shadow-[0_-8px_30px_rgba(0,0,0,0.2)] transition-colors">
         {bottomNavLinks.map((link) => {
           const Icon = link.icon;
           return (
@@ -78,14 +82,14 @@ const Layout = ({ children }) => {
               key={link.path}
               to={link.path}
               className={({ isActive }) =>
-                `w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-150 active:scale-90 ${isActive
-                  ? 'bg-blue-50 dark:bg-blue-950/40 text-primary'
-                  : 'text-slate-400 hover:text-slate-650 dark:text-slate-500'
+                `w-11 h-11 flex items-center justify-center transition-all duration-155 active:scale-90 ${isActive
+                  ? 'active text-primary border-b-[3px] border-b-primary rounded-none'
+                  : 'text-slate-400 hover:text-slate-650 dark:text-slate-550'
                 }`
               }
               aria-label={link.name}
             >
-              <Icon size={20} strokeWidth={2} />
+              <Icon size={19} strokeWidth={2} />
             </NavLink>
           );
         })}

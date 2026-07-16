@@ -1,20 +1,14 @@
 import React, { useMemo } from 'react';
 import { getTopPerformers } from '../../utils/analyticsHelpers';
 import { Trophy, Medal, UserCheck } from 'lucide-react';
-
-const formatRupee = (value) => {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0
-  }).format(value);
-};
+import { useLeads } from '../../context/LeadContext';
 
 /**
  * TopPerformersCard Component
  * Displays a leaderboard ranking team reps by closed-won deal revenue.
  */
 const TopPerformersCard = ({ leads }) => {
+  const { formatCurrency } = useLeads();
   const performers = useMemo(() => getTopPerformers(leads), [leads]);
 
   // Compute the max value to calculate proportional progress bars
@@ -36,7 +30,7 @@ const TopPerformersCard = ({ leads }) => {
   };
 
   return (
-    <div className="p-6 bg-white dark:bg-card-dark border border-slate-200 dark:border-border-dark rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between">
+    <div className="p-6 glass-card border border-border/40 dark:border-border/10 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between">
       
       {/* Card Header */}
       <div>
@@ -69,7 +63,7 @@ const TopPerformersCard = ({ leads }) => {
                   
                   <div className="text-right">
                     <span className="font-extrabold text-slate-900 dark:text-white">
-                      {formatRupee(rep.value)}
+                      {formatCurrency(rep.value)}
                     </span>
                     <span className="text-[9px] text-slate-400 dark:text-slate-500 ml-1.5 font-medium">
                       ({pctOfTotal}%)

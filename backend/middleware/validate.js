@@ -1,31 +1,34 @@
 import { validationResult } from 'express-validator';
 
 /**
- * Express middleware runner to execute express-validator checks and collect formatting errors.
- * Returns 400 with a list of field-level errors if any checks fail.
- * 
- * @param {Array<Object>} validations - Array of express-validator validation chains
+ * Validation middleware to handle express-validator schema checks.
+ * Accepts validation chains, runs them in parallel, and returns standard
+ * error payloads if failures are found.
+ *
+ * @param {Array} validations - Array of express-validator assertions
  * @returns {Function} Express middleware function
  */
 export const validate = (validations) => {
   return async (req, res, next) => {
-    // Run all validations in the array
-    for (const validation of validations) {
-      await validation.run(req);
-    }
+    // Execute all validation chains in parallel
+    await Promise.all(validations.map((validation) => validation.run(req)));
 
-    // Collect validation results
+    // Gather errors from request context
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      const formattedErrors = errors.array().map((err) => ({
+        field: err.path || err.param,
+        message: err.msg,
+      }));
+
+      // Return 400 with the exact requested layout
       return res.status(400).json({
         success: false,
-        errors: errors.array().map((err) => ({
-          field: err.path || err.param,
-          message: err.msg,
-        })),
+        errors: formattedErrors,
       });
     }
 
+    // Call next middleware if checks pass
     next();
   };
 };

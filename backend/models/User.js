@@ -2,113 +2,111 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 /**
- * Mongoose Schema for the User model.
- * Defines structure, validations, and options for user account records.
- * 
- * @type {mongoose.Schema}
+ * Mongoose schema definition for User accounts.
+ * Governs authentication credentials and RBAC roles.
  */
-export const UserSchema = new mongoose.Schema(
+const UserSchema = new mongoose.Schema(
   {
     /**
-     * The full name of the user.
-     * Required field, trimmed of whitespace, must be between 2 and 50 characters long.
+     * User's full name.
+     * @type {String}
      */
     name: {
       type: String,
-      required: [true, 'Name is required.'],
+      required: [true, 'Name is required'],
       trim: true,
-      minLength: [2, 'Name must be at least 2 characters long.'],
-      maxLength: [50, 'Name cannot exceed 50 characters.'],
+      minlength: [2, 'Name must be at least 2 characters long'],
+      maxlength: [50, 'Name cannot exceed 50 characters'],
     },
     /**
-     * The unique login email address for the user.
-     * Required, converted to lowercase, trimmed, and validated against standard email format pattern.
+     * User's unique email address.
+     * @type {String}
      */
     email: {
       type: String,
-      required: [true, 'Email address is required.'],
+      required: [true, 'Email is required'],
       unique: true,
       lowercase: true,
       trim: true,
       validate: {
         validator: function (v) {
-          // Regular expression to validate standard email format
-          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+          return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(v);
         },
-        message: 'Email must be a valid email address.',
+        message: 'Email must be a valid email address',
       },
     },
     /**
-     * The password credential used for authentication.
-     * Required, minimum length of 6 characters before hashing.
-     * This field stores the hashed password and is omitted from default JSON outputs.
+     * User's hashed security credentials.
+     * @type {String}
      */
     password: {
       type: String,
-      required: [true, 'Password is required.'],
-      minLength: [6, 'Password must be at least 6 characters long.'],
+      required: [true, 'Password is required'],
+      minlength: [6, 'Password must be at least 6 characters long'],
     },
     /**
-     * The system role determining user access authorization.
-     * Enforced by enum values ['admin', 'user'], defaulting to 'user'.
+     * User's authorization role.
+     * @type {String}
      */
     role: {
       type: String,
       enum: {
         values: ['admin', 'user'],
-        message: "Role must be either 'admin' or 'user'.",
+        message: '{VALUE} is not a valid role. Allowed roles: admin, user',
       },
       default: 'user',
     },
     /**
      * Indicates whether the user account is active.
-     * Inactive users are blocked from logging in. Defaults to true.
+     * @type {Boolean}
      */
     isActive: {
       type: Boolean,
       default: true,
     },
-  },
+    },
   {
-    // Automatically manage createdAt and updatedAt timestamps
-    timestamps: true,
+    timestamps: true, // Auto-generates and manages createdAt and updatedAt fields
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
 
 /**
- * Pre-save middleware hook to hash the user's password.
- * If the password field was modified or is newly created, hashes it using bcryptjs with 10 salt rounds.
+ * Pre-save Mongoose hook to encrypt password using bcryptjs before storage.
  */
 UserSchema.pre('save', async function () {
-  // Only hash the password if it has been modified or is new
-  if (!this.isModified('password')) {
+  // Only hash password if it exists and was modified (or is new)
+  if (!this.password || !this.isModified('password')) {
     return;
   }
 
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-  } catch (error) {
-    console.error('Error in password hashing pre-save hook:', error);
-    throw error;
+  // Check if already hashed to prevent double hashing
+  if (this.password.startsWith('$2a$') || this.password.startsWith('$2b$')) {
+    return;
   }
+
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
 /**
- * Compares a plain text candidate password with the user's stored hashed password.
+ * Compares plain text password with database stored hashed password.
  * 
- * @param {string} candidatePassword - The plain text password to compare.
- * @returns {Promise<boolean>} Resolves to true if passwords match, or false otherwise.
+ * @param {String} candidatePassword - Plain text password input
+ * @returns {Promise<Boolean>} True if matches, false otherwise
  */
 UserSchema.methods.comparePassword = async function (candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
+  if (!this.password) {
+    return false;
+  }
+  return await bcrypt.compare(candidatePassword, this.password);
 };
 
 /**
- * Overrides the default toJSON serialization method.
- * Deletes the password field from the returned object to ensure sensitive data is not leaked.
+ * Override standard serialization to strip password field from outgoing JSON models.
  * 
- * @returns {Object} Plain JavaScript object representation of the user document without the password.
+ * @returns {Object} User document without the password field
  */
 UserSchema.methods.toJSON = function () {
   const userObject = this.toObject();
@@ -116,11 +114,9 @@ UserSchema.methods.toJSON = function () {
   return userObject;
 };
 
-/**
- * The User Model compiled from the UserSchema.
- * 
- * @type {mongoose.Model}
- */
-export const User = mongoose.model('User', UserSchema);
+// Export the schema separately for nesting or extension
+export { UserSchema };
 
+// Export the model as the default export
+const User = mongoose.model('User', UserSchema);
 export default User;

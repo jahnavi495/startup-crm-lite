@@ -1,77 +1,69 @@
 import { errorResponse } from '../utils/apiResponse.js';
 
 /**
- * Global Express centralized error handling middleware.
- * Formats errors for Mongoose validation checks, database casting, duplicate key constraints,
- * and JWT validation issues into consistent API responses.
- * 
- * @param {Object} err - Error object thrown in application logic
+ * Global Express centralized error-handling middleware.
+ * Catch-all handler for errors occurring inside the application routing logic.
+ *
+ * @param {Error} err - Error object caught by Express
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function callback
- * @returns {Object} Express response object containing formatted error payload
+ * @param {Function} next - Express next middleware function
  */
 export const errorHandler = (err, req, res, next) => {
-  let statusCode = 500;
-  let message = 'Server error';
+  // Define default values
+  let statusCode = err.statusCode || 500;
+  let message = err.message || 'Server error';
   let errors = null;
 
-  // 1. Mongoose ValidationError (validation failed for schema fields)
+  // Log the actual error stack in the server console for debugging purposes
+  console.error('Logged Error:', err);
+
+  // 1. Handle Mongoose validation errors (e.g. schema checks fail)
   if (err.name === 'ValidationError') {
     statusCode = 400;
-    message = 'Validation Check Failed';
-    // Format error messages field-by-field
-    errors = Object.values(err.errors).map((val) => ({
-      field: val.path,
-      message: val.message,
-    }));
-  }
+    message = 'Validation Error';
+    errors = {};
 
-  // 2. Mongoose CastError (invalid ObjectId format)
+    // Construct field-by-field error details map
+    Object.keys(err.errors).forEach((key) => {
+      errors[key] = err.errors[key].message;
+    });
+  }
+  // 2. Handle Mongoose CastError (e.g. invalid MongoDB ObjectId format)
   else if (err.name === 'CastError') {
     statusCode = 404;
     message = 'Resource not found';
   }
-
-  // 3. MongoDB duplicate key error (code 11000)
+  // 3. Handle MongoDB Duplicate Key Conflict (code 11000)
   else if (err.code === 11000) {
     statusCode = 409;
     message = 'Email already exists';
-    // Extract key details if available
-    if (err.keyValue) {
-      errors = err.keyValue;
+  }
+  // 4. Handle JWT authorization verification issues
+  else if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+    statusCode = 401;
+    message = err.name === 'TokenExpiredError' ? 'Token expired' : 'Invalid token';
+  }
+  // 5. Handle all other unmapped errors
+  else {
+    // If status code was not explicitly set on the error, fallback to 500 "Server error"
+    if (!err.statusCode) {
+      statusCode = 500;
+      message = 'Server error';
     }
   }
 
-  // 4. JWT Verification Errors
-  else if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
-    statusCode = 401;
-    message = err.name === 'TokenExpiredError' 
-      ? 'Authentication token expired' 
-      : 'Authentication token is invalid';
-  }
-
-  // Log full error object in console for developer debugging in non-production environments
-  if (process.env.NODE_ENV !== 'production') {
-    console.error('Error details caught by errorHandler:', err);
-  }
-
-  // Assemble final JSON response payload
-  const responsePayload = {
-    success: false,
-    message,
-  };
-
-  if (errors !== null) {
-    responsePayload.errors = errors;
-  }
-
-  // Conditionally append stack trace in development mode
+  // Format error payload: Include stack trace when process.env.NODE_ENV is 'development'
+  let errorPayload;
   if (process.env.NODE_ENV === 'development') {
-    responsePayload.stack = err.stack;
+    errorPayload = {
+      stack: err.stack,
+      details: errors,
+    };
+  } else {
+    errorPayload = errors;
   }
 
-  return res.status(statusCode).json(responsePayload);
+  // Respond using the API response helper
+  return errorResponse(res, message, statusCode, errorPayload);
 };
-
-export default errorHandler;

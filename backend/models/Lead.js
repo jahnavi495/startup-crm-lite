@@ -1,155 +1,157 @@
 import mongoose from 'mongoose';
 
 /**
- * Mongoose Schema for the Lead model.
- * Defines structure, validations, virtual fields, and indexes for CRM lead tracking.
- * 
- * @type {mongoose.Schema}
+ * Mongoose schema definition for CRM opportunity leads.
+ * Tracks client contact information, status stages, and refers to owner user.
  */
-export const LeadSchema = new mongoose.Schema(
+const LeadSchema = new mongoose.Schema(
   {
     /**
-     * The name of the primary contact person for the lead.
-     * Required field, trimmed, must be between 2 and 100 characters long.
+     * Contact person's full name.
+     * @type {String}
      */
     name: {
       type: String,
-      required: [true, 'Name is required.'],
+      required: [true, 'Contact name is required'],
       trim: true,
-      minLength: [2, 'Name must be at least 2 characters long.'],
-      maxLength: [100, 'Name cannot exceed 100 characters.'],
+      minlength: [2, 'Contact name must be at least 2 characters long'],
+      maxlength: [100, 'Contact name cannot exceed 100 characters'],
     },
     /**
-     * The company or organization name associated with the lead.
-     * Required field, trimmed.
+     * Company or organization name the lead belongs to.
+     * @type {String}
      */
     company: {
       type: String,
-      required: [true, 'Company is required.'],
+      required: [true, 'Company name is required'],
       trim: true,
     },
     /**
-     * The contact email address for the lead.
-     * Required field, trimmed, and validated against standard email format.
+     * Lead contact email address.
+     * @type {String}
      */
     email: {
       type: String,
-      required: [true, 'Email is required.'],
+      required: [true, 'Email is required'],
       trim: true,
+      lowercase: true,
       validate: {
         validator: function (v) {
-          // Regular expression to validate standard email format
-          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+          return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(v);
         },
-        message: 'Email must be a valid email address.',
+        message: 'Email must be a valid email address',
       },
     },
     /**
-     * The contact phone number for the lead.
-     * Optional field, trimmed.
+     * Optional telephone contact number.
+     * @type {String}
      */
     phone: {
       type: String,
       trim: true,
     },
     /**
-     * The estimated monetary value (deal size) of the lead.
-     * Optional field, defaults to 0. Retained to preserve integration with 
-     * analytics charts and pipeline overview calculations.
+     * Estimated opportunity deal size value.
+     * @type {Number}
      */
     value: {
       type: Number,
       default: 0,
     },
     /**
-     * The current lifecycle status stage of the lead.
-     * Enforced by enum values to align precisely with frontend constants.
-     * Defaults to 'New'.
+     * Sales pipeline stage status.
+     * @type {String}
      */
     status: {
       type: String,
       enum: {
-        values: ['New', 'Contacted', 'Meeting Scheduled', 'Proposal Sent', 'Won', 'Lost'],
-        message: 'Status must be one of: New, Contacted, Meeting Scheduled, Proposal Sent, Won, Lost.',
+        values: ['New', 'Contacted', 'Qualified', 'Meeting Scheduled', 'Proposal Sent', 'Negotiation', 'Won', 'Lost'],
+        message: '{VALUE} is not a valid lead status',
       },
       default: 'New',
     },
     /**
-     * The acquisition source where the lead originated.
-     * Enforced by enum values to align precisely with frontend constants.
-     * Defaults to 'Website'.
+     * Customer acquisition channel source.
+     * @type {String}
      */
     source: {
       type: String,
       enum: {
-        values: ['Website', 'Referral', 'LinkedIn', 'Cold Call', 'Email Campaign', 'Other'],
-        message: 'Source must be one of: Website, Referral, LinkedIn, Cold Call, Email Campaign, Other.',
+        values: ['Website', 'Referral', 'LinkedIn', 'Cold Call', 'Email Campaign', 'Facebook', 'Instagram', 'Google Ads', 'Other'],
+        message: '{VALUE} is not a valid lead source',
       },
       default: 'Website',
     },
     /**
-     * Additional notes, details, or descriptions from communication logs.
-     * Optional field, maximum length of 1000 characters.
+     * Optional text notes or details about the client opportunity.
+     * @type {String}
      */
     notes: {
       type: String,
-      maxLength: [1000, 'Notes cannot exceed 1000 characters.'],
+      maxlength: [1000, 'Notes cannot exceed 1000 characters'],
     },
     /**
-     * The user ID of the owner who created and manages this lead.
-     * Required reference pointing to the User model.
+     * Reference to the User account owning/managing this lead.
+     * @type {mongoose.Schema.Types.ObjectId}
      */
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: [true, 'Owner is required.'],
+      required: [true, 'Owner reference is required'],
     },
   },
   {
-    // Automatically manage createdAt and updatedAt timestamps
-    timestamps: true,
-    // Enable virtual fields to be included in JSON and object serialization
+    timestamps: true, // Auto-generates and manages createdAt and updatedAt fields
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
   }
 );
 
-// --- Indexes ---
-
-// Compound index on (owner, status) for fast filtered queries in the sales pipeline
+// Compound index on owner and status for fast filtered queries
 LeadSchema.index({ owner: 1, status: 1 });
 
-// Index on email for fast contact/lead lookups
+// Index on email for fast lookups
 LeadSchema.index({ email: 1 });
 
-// Compound indexes for pagination and chronologically sorted queries
-LeadSchema.index({ owner: 1, createdAt: -1 });
-LeadSchema.index({ owner: 1, status: 1, createdAt: -1 });
-LeadSchema.index({ owner: 1, source: 1, createdAt: -1 });
+// Index on owner and name for quick name lookup
+LeadSchema.index({ owner: 1, name: 1 });
 
-// --- Virtual Fields ---
+// Index on owner and company for quick company search
+LeadSchema.index({ owner: 1, company: 1 });
+
+// Index on owner and source for filtered sources
+LeadSchema.index({ owner: 1, source: 1 });
+
+// Index on owner and createdAt for date-range pagination and filtering
+LeadSchema.index({ owner: 1, createdAt: -1 });
+
 
 /**
- * Virtual field 'age' calculating the number of days since the lead was created.
- * Useful for pipeline stagnation analytics.
- * 
- * @name age
- * @type {number}
+ * Virtual property calculating lead age in days since it was created.
+ * @returns {Number} Days elapsed since lead creation
  */
 LeadSchema.virtual('age').get(function () {
   if (!this.createdAt) {
     return 0;
   }
-  const differenceInMs = Date.now() - new Date(this.createdAt).getTime();
-  // Convert milliseconds to full days
-  return Math.floor(differenceInMs / (1000 * 60 * 60 * 24));
+  const diffMs = Date.now() - this.createdAt.getTime();
+  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
 });
 
 /**
- * The Lead Model compiled from the LeadSchema.
- * 
- * @type {mongoose.Model}
+ * Virtual property formatting the creation date as YYYY-MM-DD.
+ * @returns {String} Creation date formatted as YYYY-MM-DD
  */
-export const Lead = mongoose.model('Lead', LeadSchema);
+LeadSchema.virtual('date').get(function () {
+  if (!this.createdAt) {
+    return '';
+  }
+  return this.createdAt.toISOString().split('T')[0];
+});
 
+// Export the schema separately for nesting or extension
+export { LeadSchema };
+
+// Export the model as the default export
+const Lead = mongoose.model('Lead', LeadSchema);
 export default Lead;

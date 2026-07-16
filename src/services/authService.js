@@ -1,63 +1,105 @@
 import api from './api';
 
 /**
- * Service to execute Authentication tasks against the backend API.
- * Unwraps Axios response payloads to return server JSON data directly.
+ * Register a new user account.
+ * 
+ * @param {string} name - User's full name
+ * @param {string} email - User's email address
+ * @param {string} password - User's password
+ * @returns {Promise<Object>} The API response payload data
  */
-const authService = {
-  /**
-   * Registers a new user account.
-   * 
-   * @param {string} name
-   * @param {string} email
-   * @param {string} password
-   * @returns {Promise<Object>} Response data containing user profile and token
-   */
-  async register(name, email, password) {
-    const response = await api.post('/api/auth/register', { name, email, password });
-    return response.data;
-  },
-
-  /**
-   * Authenticates user credentials.
-   * 
-   * @param {string} email
-   * @param {string} password
-   * @returns {Promise<Object>} Response data containing user profile and token
-   */
-  async login(email, password) {
-    const response = await api.post('/api/auth/login', { email, password });
-    return response.data;
-  },
-
-  /**
-   * Logs out the user by deleting the local storage JWT credential.
-   * Stateless server logout.
-   */
-  logout() {
-    localStorage.removeItem('crm-token');
-  },
-
-  /**
-   * Retrieves the currently logged-in user profile details.
-   * 
-   * @returns {Promise<Object>} Response data containing user object
-   */
-  async getProfile() {
-    const response = await api.get('/api/auth/profile');
-    return response.data;
-  },
-
-  /**
-   * Updates user profile fields (e.g. name, password).
-   * 
-   * @param {Object} data - Update payload containing name, oldPassword, newPassword
-   * @returns {Promise<Object>} Response data containing updated user details
-   */
-  async updateProfile(data) {
-    const response = await api.put('/api/auth/profile', data);
-    return response.data;
-  },
+export const register = async (name, email, password) => {
+  const response = await api.post('/api/auth/register', { name, email, password });
+  return response.data;
 };
 
-export default authService;
+/**
+ * Log in a user with credentials.
+ * 
+ * @param {string} email - User's email
+ * @param {string} password - User's password
+ * @returns {Promise<Object>} The API response payload containing the user object and JWT token
+ */
+export const login = async (email, password) => {
+  const response = await api.post('/api/auth/login', { email, password });
+  return response.data;
+};
+
+/**
+ * Logs out the active user session. Clears tokens locally.
+ */
+export const logout = () => {
+  localStorage.removeItem('crm-token');
+  localStorage.removeItem('startup-crm-auth-user');
+};
+
+/**
+ * Retrieve the profile details of the currently authenticated session user.
+ * 
+ * @returns {Promise<Object>} The API response payload containing the user details
+ */
+export const getProfile = async () => {
+  const response = await api.get('/api/auth/profile');
+  return response.data;
+};
+
+/**
+ * Update the user's profile details.
+ * 
+ * @param {Object} data - Profile updates payload (e.g. name, oldPassword, newPassword)
+ * @returns {Promise<Object>} The API response payload containing the updated user details
+ */
+export const updateProfile = async (data) => {
+  const response = await api.put('/api/auth/profile', data);
+  return response.data;
+};
+
+
+/**
+ * Verify OTP entered by the user.
+ * 
+ * @param {string} email - User's email
+ * @param {string} otp - 6-digit numeric OTP
+ * @param {string} purpose - 'register' or 'forgot'
+ * @returns {Promise<Object>} The API response payload
+ */
+export const verifyOtp = async (email, otp, purpose) => {
+  const response = await api.post('/api/auth/verify-otp', { email, otp, purpose });
+  return response.data;
+};
+
+/**
+ * Request password reset OTP code.
+ * 
+ * @param {string} email - User's email
+ * @returns {Promise<Object>} The API response payload
+ */
+export const forgotPassword = async (email) => {
+  const response = await api.post('/api/auth/forgot-password', { email });
+  return response.data;
+};
+
+/**
+ * Reset password using the received OTP code.
+ * 
+ * @param {string} email - User's email
+ * @param {string} otp - 6-digit verification code
+ * @param {string} newPassword - New password
+ * @returns {Promise<Object>} The API response payload
+ */
+export const resetPassword = async (email, otp, newPassword) => {
+  const response = await api.post('/api/auth/reset-password', { email, otp, newPassword });
+  return response.data;
+};
+
+/**
+ * Resend code to user email respecting cooldowns and limits.
+ * 
+ * @param {string} email - User's email
+ * @param {string} purpose - 'register' or 'forgot'
+ * @returns {Promise<Object>} The API response payload
+ */
+export const resendOtp = async (email, purpose) => {
+  const response = await api.post('/api/auth/resend-otp', { email, purpose });
+  return response.data;
+};

@@ -5,101 +5,133 @@
  * @property {string} company - Organization name
  * @property {string} email - Contact email address
  * @property {string} phone - Contact phone number
- * @property {number} value - Financial deal estimate value in INR
+ * @property {number} value - Financial deal estimate value in USD
  * @property {'New' | 'Contacted' | 'Meeting Scheduled' | 'Proposal Sent' | 'Won' | 'Lost'} status - Pipeline stage status
  * @property {'Website' | 'Referral' | 'LinkedIn' | 'Cold Call' | 'Email Campaign' | 'Other'} source - Acquisition source channel
  * @property {string} createdAt - Calendar ISO timestamp when lead was created
- * @property {string} [contactedAt] - Contacted timestamp
- * @property {string} [meetingAt] - Meeting scheduled timestamp
- * @property {string} [proposalAt] - Proposal sent timestamp
- * @property {string} [wonAt] - Won timestamp
- * @property {string} owner - Assigned sales rep owner
  */
 
 /**
- * 6 default sample leads representing realistic Indian startup leads
- * Spread over the last 6 months for clear monthly analytical graphs.
+ * Extended set of 16 sample leads (Indian context) used as defaults
+ * to demonstrate full CRM pipeline density and analytics trends.
+ * 
  * @type {Lead[]}
  */
 export const sampleLeads = [
   {
-    id: 'lead_001',
-    name: 'Vikram Malhotra',
-    company: 'Alpha Digital solutions',
-    email: 'vikram@alphadigital.co.in',
+    id: 'lead-1',
+    name: 'Rajesh Kumar',
+    company: 'Tata Consultancy Services',
+    email: 'rajesh.kumar@tcs.com',
     phone: '+91 98765 43210',
-    status: 'Lost',
-    source: 'LinkedIn',
     value: 45000,
-    createdAt: '2026-01-15T10:30:00Z',
-    contactedAt: '2026-01-16T11:00:00Z',
-    owner: 'Sarah'
-  },
-  {
-    id: 'lead_002',
-    name: 'Neha Gupta',
-    company: 'Gupta Tech Corp',
-    email: 'neha@guptatech.com',
-    phone: '+91 99999 88888',
     status: 'New',
     source: 'Website',
-    value: 25000,
-    createdAt: '2026-02-20T14:45:00Z',
-    owner: 'Sarah'
+    createdAt: '2026-06-10T12:00:00.000Z',
   },
   {
-    id: 'lead_003',
-    name: 'Amit Sharma',
-    company: 'Sharma Logistics',
-    email: 'amit@sharmalogistics.in',
-    phone: '+91 91234 56789',
+    id: 'lead-2',
+    name: 'Priya Sharma',
+    company: 'Reliance Industries',
+    email: 'priya.sharma@ril.com',
+    phone: '+91 98765 43211',
+    value: 85000,
+    status: 'Won',
+    source: 'Referral',
+    createdAt: '2026-06-01T10:30:00.000Z',
+    wonAt: '2026-06-15T15:00:00.000Z'
+  },
+  {
+    id: 'lead-3',
+    name: 'Amit Patel',
+    company: 'Infosys',
+    email: 'amit.patel@infosys.com',
+    phone: '+91 98765 43212',
+    value: 12000,
+    status: 'Contacted',
+    source: 'LinkedIn',
+    createdAt: '2026-06-14T09:15:00.000Z',
+  },
+  {
+    id: 'lead-4',
+    name: 'Sunita Rao',
+    company: 'Wipro Technologies',
+    email: 'sunita.rao@wipro.com',
+    phone: '+91 98765 43213',
+    value: 27500,
+    status: 'Meeting Scheduled',
+    source: 'Cold Call',
+    createdAt: '2026-06-12T14:45:00.000Z',
+    meetingAt: '2026-06-14T10:00:00.000Z'
+  },
+  {
+    id: 'lead-5',
+    name: 'Vikram Malhotra',
+    company: 'HDFC Bank',
+    email: 'vikram.malhotra@hdfcbank.com',
+    phone: '+91 98765 43214',
+    value: 64000,
+    status: 'Lost',
+    source: 'Email Campaign',
+    createdAt: '2026-05-25T11:20:00.000Z',
+  },
+  {
+    id: 'lead-6',
+    name: 'Neha Gupta',
+    company: 'Zomato',
+    email: 'neha.gupta@zomato.com',
+    phone: '+91 98765 43215',
+    value: 18500,
+    status: 'New',
+    source: 'Other',
+    createdAt: '2026-06-16T16:00:00.000Z',
+  },
+  {
+    id: 'lead-7',
+    name: 'Rohan Mehta',
+    company: 'Larsen & Toubro',
+    email: 'rohan.mehta@larsentoubro.com',
+    phone: '+91 98765 43216',
+    value: 95000,
+    status: 'Proposal Sent',
+    source: 'Website',
+    createdAt: '2026-06-18T10:00:00.000Z',
+    proposalAt: '2026-06-22T14:00:00.000Z'
+  },
+  {
+    id: 'lead-8',
+    name: 'Anjali Desai',
+    company: 'Adani Group',
+    email: 'anjali.desai@adani.com',
+    phone: '+91 98765 43217',
+    value: 150000,
+    status: 'Won',
+    source: 'Referral',
+    createdAt: '2026-06-05T09:00:00.000Z',
+    wonAt: '2026-06-20T17:00:00.000Z'
+  },
+  {
+    id: 'lead-9',
+    name: 'Sandeep Singh',
+    company: 'Paytm',
+    email: 'sandeep.singh@paytm.com',
+    phone: '+91 98765 43218',
+    value: 35000,
     status: 'Contacted',
     source: 'Cold Call',
-    value: 65000,
-    createdAt: '2026-03-12T09:15:00Z',
-    contactedAt: '2026-03-14T15:30:00Z',
-    owner: 'Alex'
+    createdAt: '2026-05-15T14:00:00.000Z',
+    contactedAt: '2026-05-18T11:00:00.000Z'
   },
   {
-    id: 'lead_004',
-    name: 'Priya Iyer',
-    company: 'Iyer Consulting Services',
-    email: 'priya@iyerconsulting.com',
-    phone: '+91 98760 12345',
+    id: 'lead-10',
+    name: 'Pooja Reddy',
+    company: 'ICICI Bank',
+    email: 'pooja.reddy@icicibank.com',
+    phone: '+91 98765 43219',
+    value: 72000,
     status: 'Meeting Scheduled',
-    source: 'Referral',
-    value: 120000,
-    createdAt: '2026-04-18T10:00:00Z',
-    contactedAt: '2026-04-19T11:30:00Z',
-    meetingAt: '2026-04-22T14:00:00Z',
-    owner: 'David'
-  },
-  {
-    id: 'lead_005',
-    name: 'Rajesh Kumar',
-    company: 'Kumar Ventures',
-    email: 'rajesh@kumarventures.com',
-    phone: '+91 90000 12345',
-    status: 'Won',
     source: 'LinkedIn',
-    value: 180000,
-    createdAt: '2026-05-25T11:00:00Z',
-    contactedAt: '2026-05-26T12:00:00Z',
-    meetingAt: '2026-05-28T10:00:00Z',
-    proposalAt: '2026-05-30T16:00:00Z',
-    wonAt: '2026-06-05T14:30:00Z',
-    owner: 'Sarah'
-  },
-  {
-    id: 'lead_006',
-    name: 'Divya Rao',
-    company: 'Rao Industries',
-    email: 'divya@raoind.com',
-    phone: '+91 95555 66666',
-    status: 'New',
-    source: 'Email Campaign',
-    value: 90000,
-    createdAt: '2026-06-10T15:00:00Z',
-    owner: 'Alex'
+    createdAt: '2026-06-22T11:30:00.000Z',
+    meetingAt: '2026-06-25T15:00:00.000Z'
   }
 ];

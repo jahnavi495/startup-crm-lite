@@ -14,7 +14,7 @@ const DarkModeToggle = () => {
     <button
       type="button"
       onClick={toggleTheme}
-      className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-150/80 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white transition-colors duration-150 focus:outline-hidden cursor-pointer shrink-0"
+      className="p-2 rounded-xl border border-slate-200/50 dark:border-slate-800/50 bg-white/60 dark:bg-slate-950/60 backdrop-blur-xs text-slate-500 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white shadow-xs transition-all duration-200 cursor-pointer shrink-0"
       role="switch"
       aria-checked={isDarkMode}
       aria-label="Toggle theme mode"

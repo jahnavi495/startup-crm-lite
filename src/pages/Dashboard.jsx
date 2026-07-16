@@ -1,78 +1,142 @@
-import React, { useMemo, useState } from 'react';
-import { Users, DollarSign, Percent, TrendingUp, Plus } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { useLeads } from '../context/LeadContext';
+import { Users, DollarSign, Percent, TrendingUp, IndianRupee } from 'lucide-react';
 import StatsCard from '../components/dashboard/StatsCard';
 import PipelineOverview from '../components/dashboard/PipelineOverview';
 import RecentLeads from '../components/dashboard/RecentLeads';
 import QuickActions from '../components/dashboard/QuickActions';
-import { useLeads } from '../context/LeadContext';
+import AddLeadModal from '../components/leads/AddLeadModal';
+import ShimmerButton from '../components/common/ShimmerButton';
+import useDocumentMetadata from '../hooks/useDocumentMetadata';
 
 /**
  * Dashboard Page Component
- * Assembles the main CRM dashboard experience with KPI cards, pipeline insight,
- * recent lead activity, and quick actions.
+ * Renders the CRM analytics workspace by aggregating and mounting:
+ * 1. 4 Key Stats Cards (Total Leads, Pipeline, Conversion, and Revenue) in a responsive grid
+ * 2. Pipeline Segment progress bar overview
+ * 3. Recent leads table view
+ * 4. Workspace Quick Actions toolbar (including inline lead registration modal trigger)
  */
 const Dashboard = () => {
+  const { leads, formatCurrency, currency, loadDemoLeads } = useLeads();
+
+  useDocumentMetadata(
+    'Dashboard | StartupCRM',
+    'StartupCRM dashboard showing total leads, sales pipeline stages, conversion rates, and revenue performance.'
+  );
+
+  // State to manage opening of local AddLeadModal for quick action buttons
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  const { leads, formatCurrency } = useLeads();
-
-  const metrics = useMemo(() => {
-    const totalLeads = leads.length;
-    const activePipeline = leads.filter((lead) => lead.status !== 'Lost').reduce((sum, lead) => sum + lead.value, 0);
-    const wonLeads = leads.filter((lead) => lead.status === 'Won');
-    const lostLeads = leads.filter((lead) => lead.status === 'Lost');
-    const closedCount = wonLeads.length + lostLeads.length;
-    const winRate = closedCount > 0 ? Math.round((wonLeads.length / closedCount) * 100) : 0;
-    const closedRevenue = wonLeads.reduce((sum, lead) => sum + lead.value, 0);
-
-    return {
-      totalLeads,
-      activePipeline,
-      winRate,
-      closedRevenue
-    };
+  // 1. Calculate stats dynamically from context leads database
+  const totalLeads = leads.length;
+  
+  const pipelineValue = useMemo(() => {
+    return leads
+      .filter((l) => l.status !== 'Lost')
+      .reduce((sum, l) => sum + l.value, 0);
   }, [leads]);
+
+  const wonLeads = useMemo(() => leads.filter((l) => l.status === 'Won'), [leads]);
+  const lostLeads = useMemo(() => leads.filter((l) => l.status === 'Lost'), [leads]);
+  
+  const closedLeadsCount = useMemo(() => wonLeads.length + lostLeads.length, [wonLeads, lostLeads]);
+
+  const winRate = useMemo(() => {
+    return closedLeadsCount > 0 
+      ? Math.round((wonLeads.length / closedLeadsCount) * 100) 
+      : 0;
+  }, [closedLeadsCount, wonLeads.length]);
+
+  const closedWonRevenue = useMemo(() => {
+    return wonLeads.reduce((sum, l) => sum + l.value, 0);
+  }, [wonLeads]);
+
+  const PipelineIcon = currency === '₹' ? IndianRupee : DollarSign;
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-slate-200/80 bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.12),_transparent_45%),linear-gradient(135deg,_#ffffff,_#f8fbff)] p-6 shadow-[0_12px_40px_rgba(15,23,42,0.06)] dark:border-slate-800 dark:bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.18),_transparent_45%),linear-gradient(135deg,_#0f172a,_#111827)] sm:p-8">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Startup CRM Lite</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
-              Dashboard overview
-            </h2>
-            <p className="mt-2 max-w-2xl text-sm text-slate-600 dark:text-slate-300">
-              Monitor pipeline health, recent opportunities, and growth signals from one premium workspace.
-            </p>
+      
+      {/* Page Welcome Intro Block */}
+      <div>
+        <h2 className="text-xl font-extrabold text-slate-900 dark:text-white sm:text-2xl tracking-tight">
+          Dashboard Overview
+        </h2>
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5">
+          Monitor your sales velocity, leads distribution, and core revenue KPIs.
+        </p>
+      </div>
+
+      <>
+        {/* 2. Key Metrics Bar: 1 col on mobile, 2 on tablet, 4 on desktop */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          {/* Metric 1: Total Leads */}
+          <StatsCard
+            index={0}
+            title="Total Leads"
+            value={totalLeads}
+            icon={Users}
+            change={8.2}
+          />
+
+          {/* Metric 2: Active Pipeline Value */}
+          <StatsCard
+            index={1}
+            title="Active Pipeline"
+            value={formatCurrency(pipelineValue)}
+            icon={PipelineIcon}
+            change={12.4}
+          />
+
+          {/* Metric 3: Conversion Win Rate */}
+          <StatsCard
+            index={2}
+            title="Win Rate"
+            value={`${winRate}%`}
+            icon={Percent}
+            change={-1.5}
+          />
+
+          {/* Metric 4: Closed Revenue Won */}
+          <StatsCard
+            index={3}
+            title="Closed Revenue"
+            value={formatCurrency(closedWonRevenue)}
+            icon={TrendingUp}
+            change={24.1}
+          />
+
+        </div>
+
+        {/* 3. Pipeline Segment Progress bar card */}
+        <PipelineOverview leads={leads} />
+
+        {/* 4. Bottom Grid layout containing Recent leads and Actions */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Left column spanning 2 spaces on desktop: Recent Leads datatable */}
+          <div className="lg:col-span-2">
+            <RecentLeads leads={leads} />
           </div>
 
-          <button
-            type="button"
-            onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-600"
-          >
-            <Plus className="h-4 w-4" />
-            Add new lead
-          </button>
+          {/* Right column: Action Board */}
+          <div>
+            <QuickActions onAddLeadClick={() => setIsAddModalOpen(true)} />
+          </div>
+
         </div>
-      </div>
+      </>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatsCard title="Total Leads" value={metrics.totalLeads} icon={Users} change={8.2} color="bg-primary" />
-        <StatsCard title="Active Pipeline" value={formatCurrency(metrics.activePipeline)} icon={DollarSign} change={12.4} color="bg-success" />
-        <StatsCard title="Win Rate" value={`${metrics.winRate}%`} icon={Percent} change={-1.5} color="bg-warning" />
-        <StatsCard title="Closed Revenue" value={formatCurrency(metrics.closedRevenue)} icon={TrendingUp} change={24.1} color="bg-danger" />
-      </div>
+      {/* Local Add Lead modal instance linked to Dashboard Quick Actions */}
+      <AddLeadModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+      />
 
-      <PipelineOverview leads={leads} />
-
-      <div className="grid gap-6 lg:grid-cols-[1.6fr_0.8fr]">
-        <RecentLeads leads={leads} />
-        <QuickActions onAddLeadClick={() => setIsAddModalOpen(true)} />
-      </div>
     </div>
   );
 };
 
 export default Dashboard;
+

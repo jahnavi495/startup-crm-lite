@@ -1,42 +1,37 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import authService from '../services/authService';
+import * as authService from '../services/authService';
 
-// Create the Context object
 const AuthContext = createContext(undefined);
 
 /**
  * AuthProvider Component
  * Exposes active session states, credentials verification, and account registration.
- * Connects directly to the stateless backend database API.
- * 
+ * Synchronizes and persists session JWT token in localStorage under key 'crm-token'.
+ *
  * @param {Object} props
  * @param {React.ReactNode} props.children - Child elements
  */
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('crm-token') || null);
+  const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Restore user session on mount if token is stored locally
+  // Restore session from localStorage on component mount
   useEffect(() => {
     const restoreSession = async () => {
       const storedToken = localStorage.getItem('crm-token');
       if (storedToken) {
         try {
+          setToken(storedToken);
+          // Restore user details from the /profile route
           const profileData = await authService.getProfile();
-          // API returns { success: true, message, data: { user } }
-          if (profileData && profileData.data && profileData.data.user) {
-            setUser(profileData.data.user);
-            setToken(storedToken);
-          } else {
-            // Flush corrupt token
-            localStorage.removeItem('crm-token');
-            setToken(null);
-            setUser(null);
-          }
+          // API returns response as success: true, data: user
+          setUser(profileData.data || profileData);
         } catch (error) {
-          console.error('Session restoration failed:', error);
+          console.error('Failed to restore user session:', error.message);
+          // Token is invalid/expired; clear local credentials
           localStorage.removeItem('crm-token');
+          localStorage.removeItem('startup-crm-auth-user');
           setToken(null);
           setUser(null);
         }
@@ -49,7 +44,7 @@ export const AuthProvider = ({ children }) => {
 
   /**
    * Logs a user in with given credentials.
-   * 
+   *
    * @param {string} email
    * @param {string} password
    */
@@ -57,24 +52,26 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(true);
     try {
       const response = await authService.login(email, password);
-      // API returns { success: true, message, data: { user, token } }
-      const { user: userData, token: userToken } = response.data;
+      // The API response contains { success: true, data: { token, user } }
+      const { token: receivedToken, user: receivedUser } = response.data || response;
       
-      localStorage.setItem('crm-token', userToken);
-      setToken(userToken);
-      setUser(userData);
+      localStorage.setItem('crm-token', receivedToken);
+      localStorage.setItem('startup-crm-auth-user', JSON.stringify(receivedUser));
+      
+      setToken(receivedToken);
+      setUser(receivedUser);
       return response;
     } catch (error) {
-      console.error('Login execution error:', error);
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
+
   /**
-   * Registers a new user account.
-   * 
+   * Register a new user account.
+   *
    * @param {string} name
    * @param {string} email
    * @param {string} password
@@ -83,15 +80,16 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(true);
     try {
       const response = await authService.register(name, email, password);
-      // API returns { success: true, message, data: { user, token } }
-      const { user: userData, token: userToken } = response.data;
-
-      localStorage.setItem('crm-token', userToken);
-      setToken(userToken);
-      setUser(userData);
+      const { token: receivedToken, user: receivedUser } = response.data || response;
+      
+      if (receivedToken && receivedUser) {
+        localStorage.setItem('crm-token', receivedToken);
+        localStorage.setItem('startup-crm-auth-user', JSON.stringify(receivedUser));
+        setToken(receivedToken);
+        setUser(receivedUser);
+      }
       return response;
     } catch (error) {
-      console.error('Registration execution error:', error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -99,33 +97,66 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
-   * Logs out the current user, clearing session states.
+   * Verify registration or reset password OTP.
+   *
+   * @param {string} email
+   * @param {string} otp
+   * @param {string} purpose
+   */
+  const verifyOtp = async (email, otp, purpose) => {
+    setIsLoading(true);
+    try {
+      const response = await authService.verifyOtp(email, otp, purpose);
+      const { token: receivedToken, user: receivedUser } = response.data || response;
+      
+      if (purpose === 'register' && receivedToken && receivedUser) {
+        localStorage.setItem('crm-token', receivedToken);
+        localStorage.setItem('startup-crm-auth-user', JSON.stringify(receivedUser));
+        setToken(receivedToken);
+        setUser(receivedUser);
+      }
+      return response;
+    } catch (error) {
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
+   * Update authenticated user profile details.
+   *
+   * @param {Object} data - Profile updates payload (e.g. name, oldPassword, newPassword)
+   */
+  const updateProfile = async (data) => {
+    setIsLoading(true);
+    try {
+      const response = await authService.updateProfile(data);
+      // The API response contains { success: true, data: user }
+      const updatedUser = response.data || response;
+      
+      localStorage.setItem('startup-crm-auth-user', JSON.stringify(updatedUser));
+      setUser(updatedUser);
+      return response;
+    } catch (error) {
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
+   * Logs out the current user and clears session states.
    */
   const logout = () => {
     authService.logout();
     setToken(null);
     setUser(null);
+    setIsLoading(false);
     
-    // Hard redirect to clear any memory states and route to login
-    window.location.href = '/login';
-  };
-
-  /**
-   * Updates current user profile details.
-   * 
-   * @param {Object} updatedFields - Fields (name, oldPassword, newPassword)
-   */
-  const updateProfile = async (updatedFields) => {
-    try {
-      const response = await authService.updateProfile(updatedFields);
-      // API returns { success: true, message, data: { user } }
-      if (response && response.data && response.data.user) {
-        setUser(response.data.user);
-      }
-      return response;
-    } catch (error) {
-      console.error('Profile update failed:', error);
-      throw error;
+    // Redirect to login screen
+    if (window.location.hash !== '#/login') {
+      window.location.href = '/#/login';
     }
   };
 
@@ -138,8 +169,9 @@ export const AuthProvider = ({ children }) => {
         isLoading,
         login,
         register,
-        logout,
+        verifyOtp,
         updateProfile,
+        logout,
       }}
     >
       {children}
@@ -150,8 +182,8 @@ export const AuthProvider = ({ children }) => {
 /**
  * useAuth Custom Hook
  * Consumer hook allowing immediate access to AuthContext states and helpers.
- * 
- * @returns {{ user: Object|null, token: string|null, isAuthenticated: boolean, isLoading: boolean, login: (email, password) => Promise<Object>, register: (name, email, password) => Promise<Object>, logout: () => void, updateProfile: (fields: Object) => Promise<Object> }}
+ *
+ * @returns {{ user: Object|null, token: string|null, isAuthenticated: boolean, isLoading: boolean, login: (email, password) => Promise<any>, register: (name, email, password) => Promise<any>, logout: () => void }}
  */
 export const useAuth = () => {
   const context = useContext(AuthContext);

@@ -1,10 +1,20 @@
 import { useState, useMemo } from 'react';
 import { useLeads } from '../context/LeadContext';
 import {
+  getStatusDistribution,
+  getMonthlyLeads,
+  getConversionByMonth,
+  getRevenueByMonth,
   getPipelineValue,
   getWonRevenue,
   getAverageSalesCycle,
-  getLostRate
+  getLostRate,
+  getLeadSourceStats,
+  getFunnelData,
+  getSalesVelocity,
+  getForecastRevenue,
+  getTopPerformers,
+  getActivityHeatmapData
 } from '../utils/analyticsHelpers';
 
 /**
@@ -26,10 +36,14 @@ const useAnalytics = () => {
 
     return leads.filter((lead) => {
       const createdStr = lead.createdAt || lead.date;
-      if (!createdStr) return false;
+      if (!createdStr) {
+        return filterRange === 'All Time';
+      }
 
       const createdDate = new Date(createdStr);
-      if (isNaN(createdDate.getTime())) return false;
+      if (isNaN(createdDate.getTime())) {
+        return filterRange === 'All Time';
+      }
 
       switch (filterRange) {
         case 'Last 7 Days': {
@@ -89,13 +103,31 @@ const useAnalytics = () => {
     };
   }, [filteredLeads]);
 
+  // Compute trend metrics for comparison (e.g. for Sales Velocity)
+  // We can calculate comparison metrics on the full/unfiltered leads list
+  const totalStats = useMemo(() => {
+    return {
+      statusDistribution: getStatusDistribution(filteredLeads),
+      monthlyLeads: getMonthlyLeads(filteredLeads),
+      conversionTrend: getConversionByMonth(filteredLeads),
+      revenueTrend: getRevenueByMonth(filteredLeads),
+      leadSourceStats: getLeadSourceStats(filteredLeads),
+      funnelData: getFunnelData(filteredLeads),
+      salesVelocity: getSalesVelocity(filteredLeads),
+      forecastRevenue: getForecastRevenue(filteredLeads),
+      topPerformers: getTopPerformers(filteredLeads),
+      activityHeatmapData: getActivityHeatmapData(filteredLeads)
+    };
+  }, [filteredLeads]);
+
   return {
     filterRange,
     setFilterRange,
     customRange,
     setCustomRange,
     leads: filteredLeads,
-    stats
+    stats,
+    charts: totalStats
   };
 };
 

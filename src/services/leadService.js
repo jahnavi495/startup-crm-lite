@@ -1,86 +1,84 @@
 import api from './api';
 
 /**
- * Service to execute Lead CRUD operations and Aggregations against the backend API.
- * Unwraps Axios response payloads to return server JSON data directly.
+ * Fetch all leads for the authenticated session user, with optional filters and sorting parameters.
+ *
+ * @param {Object} [params] - Query parameters
+ * @param {string} [params.status] - Filter by status
+ * @param {string} [params.search] - Search name, company, or email
+ * @param {number} [params.page] - Page number (defaults to 1)
+ * @param {number} [params.limit] - Max items per page (defaults to 20)
+ * @param {string} [params.sortBy] - Sort column name
+ * @param {string} [params.sortOrder] - Sort ordering ('asc' or 'desc')
+ * @returns {Promise<Object>} API response data containing leads and pagination info
  */
-const leadService = {
-  /**
-   * Retrieves a list of paginated and filtered leads.
-   * 
-   * @param {Object} [params] - Query parameters (status, search, page, limit, sortBy, sortOrder)
-   * @returns {Promise<Object>} Response data containing leads array and pagination metadata
-   */
-  async getLeads(params) {
-    const response = await api.get('/api/leads', { params });
-    return response.data;
-  },
-
-  /**
-   * Creates a new lead record.
-   * 
-   * @param {Object} leadData - Lead fields matching Lead schema
-   * @returns {Promise<Object>} Response data containing the newly created lead object
-   */
-  async createLead(leadData) {
-    const response = await api.post('/api/leads', leadData);
-    return response.data;
-  },
-
-  /**
-   * Updates an existing lead record's fields.
-   * 
-   * @param {string} id - Lead ObjectId
-   * @param {Object} leadData - Fields to update
-   * @returns {Promise<Object>} Response data containing the updated lead object
-   */
-  async updateLead(id, leadData) {
-    const response = await api.put(`/api/leads/${id}`, leadData);
-    return response.data;
-  },
-
-  /**
-   * Updates only the lifecycle status stage of a specific lead record.
-   * 
-   * @param {string} id - Lead ObjectId
-   * @param {string} status - New status stage enum value
-   * @returns {Promise<Object>} Response data containing the updated lead object
-   */
-  async updateLeadStatus(id, status) {
-    const response = await api.patch(`/api/leads/${id}/status`, { status });
-    return response.data;
-  },
-
-  /**
-   * Deletes a lead record from the database.
-   * 
-   * @param {string} id - Lead ObjectId to remove
-   * @returns {Promise<Object>} Response data confirming deletion success
-   */
-  async deleteLead(id) {
-    const response = await api.delete(`/api/leads/${id}`);
-    return response.data;
-  },
-
-  /**
-   * Retrieves cumulative sales opportunity stats for dashboard summary cards.
-   * 
-   * @returns {Promise<Object>} Response data containing total, active, won, and conversion rates
-   */
-  async getLeadStats() {
-    const response = await api.get('/api/leads/stats/summary');
-    return response.data;
-  },
-
-  /**
-   * Retrieves 6-month historical leads aggregates for analytics.
-   * 
-   * @returns {Promise<Object>} Response data containing month-by-month total and won counts
-   */
-  async getMonthlyStats() {
-    const response = await api.get('/api/leads/stats/monthly');
-    return response.data;
-  },
+export const getLeads = async (params) => {
+  const response = await api.get('/api/leads', { params });
+  return response.data;
 };
 
-export default leadService;
+/**
+ * Create a new lead.
+ *
+ * @param {Object} leadData - Lead attributes
+ * @returns {Promise<Object>} API response data containing the new lead
+ */
+export const createLead = async (leadData) => {
+  const response = await api.post('/api/leads', leadData);
+  return response.data;
+};
+
+/**
+ * Update an existing lead record.
+ *
+ * @param {string} id - Lead ID
+ * @param {Object} leadData - Lead attributes to update
+ * @returns {Promise<Object>} API response data containing the updated lead
+ */
+export const updateLead = async (id, leadData) => {
+  const response = await api.put(`/api/leads/${id}`, leadData);
+  return response.data;
+};
+
+/**
+ * Update only the status of an existing lead record.
+ *
+ * @param {string} id - Lead ID
+ * @param {string} status - New pipeline status stage
+ * @returns {Promise<Object>} API response data containing the updated lead
+ */
+export const updateLeadStatus = async (id, status) => {
+  const response = await api.patch(`/api/leads/${id}/status`, { status });
+  return response.data;
+};
+
+/**
+ * Delete a lead record.
+ *
+ * @param {string} id - Lead ID
+ * @returns {Promise<Object>} API response data confirming deletion
+ */
+export const deleteLead = async (id) => {
+  const response = await api.delete(`/api/leads/${id}`);
+  return response.data;
+};
+
+/**
+ * Fetch overview stats and KPIs summary.
+ *
+ * @returns {Promise<Object>} API response data containing pipeline calculations
+ */
+export const getLeadStats = async () => {
+  const response = await api.get('/api/leads/stats/summary');
+  return response.data;
+};
+
+/**
+ * Fetch monthly lead counts and won statuses trends.
+ *
+ * @returns {Promise<Object>} API response data containing monthly aggregation charts
+ */
+export const getMonthlyStats = async () => {
+  const response = await api.get('/api/leads/stats/monthly');
+  return response.data;
+};

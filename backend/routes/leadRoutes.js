@@ -9,131 +9,96 @@ import {
   deleteLead,
   getLeadStats,
   getMonthlyStats,
-  getQuickSearch,
+  searchLeads,
 } from '../controllers/leadController.js';
 import { protect } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 
 const router = express.Router();
 
-// Apply auth protection middleware to ALL routes in this file
+// Apply protect middleware to ALL routes in this file
 router.use(protect);
 
-/**
- * Validation rules for creating a lead record
- */
-const createLeadValidation = [
+// Lead validation rules for creating/updating records
+const leadValidation = [
   body('name')
-    .trim()
     .notEmpty()
-    .withMessage('Name is required.')
+    .withMessage('Contact name is required')
     .isLength({ min: 2 })
-    .withMessage('Name must be at least 2 characters.'),
-  body('company')
-    .trim()
-    .notEmpty()
-    .withMessage('Company is required.'),
-  body('email')
-    .trim()
-    .notEmpty()
-    .withMessage('Email is required.')
-    .isEmail()
-    .withMessage('Email must be a valid email address.')
-    .normalizeEmail(),
-  body('phone')
-    .optional()
+    .withMessage('Contact name must be at least 2 characters long')
     .trim(),
-  body('status')
-    .optional()
-    .isIn(['New', 'Contacted', 'Meeting Scheduled', 'Proposal Sent', 'Won', 'Lost'])
-    .withMessage('Status must be one of: New, Contacted, Meeting Scheduled, Proposal Sent, Won, Lost.'),
-  body('source')
-    .optional()
-    .isIn(['Website', 'Referral', 'LinkedIn', 'Cold Call', 'Email Campaign', 'Other'])
-    .withMessage('Source must be one of: Website, Referral, LinkedIn, Cold Call, Email Campaign, Other.'),
-  body('notes')
-    .optional()
-    .trim()
-    .isLength({ max: 1000 })
-    .withMessage('Notes cannot exceed 1000 characters.'),
-];
-
-/**
- * Validation rules for updating an existing lead record
- */
-const updateLeadValidation = [
-  body('name')
-    .optional()
-    .trim()
-    .isLength({ min: 2 })
-    .withMessage('Name must be at least 2 characters.'),
   body('company')
-    .optional()
-    .trim()
     .notEmpty()
-    .withMessage('Company cannot be empty.'),
-  body('email')
-    .optional()
-    .trim()
-    .isEmail()
-    .withMessage('Email must be a valid email address.')
-    .normalizeEmail(),
-  body('phone')
-    .optional()
+    .withMessage('Company name is required')
     .trim(),
+  body('email')
+    .isEmail()
+    .withMessage('Please enter a valid email address')
+    .normalizeEmail(),
   body('status')
-    .optional()
-    .isIn(['New', 'Contacted', 'Meeting Scheduled', 'Proposal Sent', 'Won', 'Lost'])
-    .withMessage('Status must be one of: New, Contacted, Meeting Scheduled, Proposal Sent, Won, Lost.'),
+    .optional({ checkFalsy: true })
+    .isIn(['New', 'Contacted', 'Qualified', 'Meeting Scheduled', 'Proposal Sent', 'Negotiation', 'Won', 'Lost'])
+    .withMessage('Invalid lead status'),
   body('source')
-    .optional()
-    .isIn(['Website', 'Referral', 'LinkedIn', 'Cold Call', 'Email Campaign', 'Other'])
-    .withMessage('Source must be one of: Website, Referral, LinkedIn, Cold Call, Email Campaign, Other.'),
-  body('notes')
-    .optional()
-    .trim()
-    .isLength({ max: 1000 })
-    .withMessage('Notes cannot exceed 1000 characters.'),
+    .optional({ checkFalsy: true })
+    .isIn(['Website', 'Referral', 'LinkedIn', 'Cold Call', 'Email Campaign', 'Facebook', 'Instagram', 'Google Ads', 'Other'])
+    .withMessage('Invalid lead source'),
+  body('value')
+    .optional({ checkFalsy: true })
+    .isNumeric()
+    .withMessage('Estimated value must be a number'),
 ];
 
-/**
- * Validation rules for updating lead status specifically
- */
-const updateStatusValidation = [
+// Validation rules specifically for status modification
+const statusUpdateValidation = [
   body('status')
-    .trim()
     .notEmpty()
-    .withMessage('Status is required.')
-    .isIn(['New', 'Contacted', 'Meeting Scheduled', 'Proposal Sent', 'Won', 'Lost'])
-    .withMessage('Status must be one of: New, Contacted, Meeting Scheduled, Proposal Sent, Won, Lost.'),
+    .withMessage('Status is required')
+    .isIn(['New', 'Contacted', 'Qualified', 'Meeting Scheduled', 'Proposal Sent', 'Negotiation', 'Won', 'Lost'])
+    .withMessage('Invalid lead status'),
 ];
 
-// --- Endpoint Routing Declarations ---
-// CRITICAL: Mount static paths BEFORE parameterized paths to prevent collision/wrong matching.
+/* =========================================================================
+   STATIC / AGGREGATION API ENDPOINTS
+   (Must be registered BEFORE dynamic /:id endpoints to avoid parameter collision)
+   ========================================================================= */
 
-// Endpoint 1: Retrieve cumulative sales opportunity pipeline aggregates and conversion rate (Private)
-router.get('/stats/summary', getLeadStats);
+// 1. GET /api/leads/stats & /api/leads/stats/summary - Fetch pipeline stats (total counts, conversion rates, and revenue)
 router.get('/stats', getLeadStats);
+router.get('/stats/summary', getLeadStats);
 
-// Endpoint 2: Retrieve monthly grouped leads breakdown for the last six calendar months (Private)
-router.get('/stats/monthly', getMonthlyStats);
+// 2. GET /api/leads/monthly-stats & /api/leads/stats/monthly - Fetch monthly aggregation counts for the last 6 months
 router.get('/monthly-stats', getMonthlyStats);
+router.get('/stats/monthly', getMonthlyStats);
 
-// Endpoint 3 & 4: Retrieve paginated search-filtered list of leads / Create a new lead (Private)
-router.route('/')
+// 2.5 GET /api/leads/search - Search endpoint for autocomplete (must be before /:id)
+router.get('/search', searchLeads);
+
+/* =========================================================================
+   COLLECTION API ENDPOINTS
+   ========================================================================= */
+
+// 3. GET /api/leads - Fetch all leads matching search/status query params
+// 4. POST /api/leads - Create a new lead assigned to the logged-in user
+router
+  .route('/')
   .get(getLeads)
-  .post(validate(createLeadValidation), createLead);
+  .post(validate(leadValidation), createLead);
 
-// Endpoint 5: Autocomplete leads search (Private)
-router.get('/search', getQuickSearch);
+/* =========================================================================
+   INDIVIDUAL RESOURCE API ENDPOINTS
+   ========================================================================= */
 
-// Endpoint 6, 7 & 8: Fetch details / modify fields / delete specific lead ID record (Private)
-router.route('/:id')
+// 5. GET /api/leads/:id - Retrieve details of a specific lead by ID
+// 6. PUT /api/leads/:id - Update an existing lead record
+// 7. DELETE /api/leads/:id - Remove a lead record from the CRM
+router
+  .route('/:id')
   .get(getLeadById)
-  .put(validate(updateLeadValidation), updateLead)
+  .put(validate(leadValidation), updateLead)
   .delete(deleteLead);
 
-// Endpoint 8: Update only status stage of a specific lead ID record (Private)
-router.patch('/:id/status', validate(updateStatusValidation), updateLeadStatus);
+// 8. PATCH /api/leads/:id/status - Update only the status stage of a specific lead
+router.patch('/:id/status', validate(statusUpdateValidation), updateLeadStatus);
 
 export default router;

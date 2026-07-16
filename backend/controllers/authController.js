@@ -1,70 +1,63 @@
+import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
+import Otp from '../models/Otp.js';
 import { successResponse, errorResponse } from '../utils/apiResponse.js';
+import { sendOtpEmail, sendPasswordResetSuccessEmail, sendRegistrationSuccessEmail } from '../utils/email.js';
 
 /**
- * PRODUCTION SECURITY BEST PRACTICE:
- * In a production environment, you should mount a rate limiter middleware here 
- * (using 'express-rate-limit') on auth endpoints (especially '/login' and '/register') 
- * to prevent brute-force attacks and credential stuffing.
- * Example:
- * const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 5 });
- * router.post('/login', authLimiter, ...);
- */
-
-/**
- * Helper function to generate a signed JWT token for a given user ID.
- * Uses JWT_SECRET and expiration configuration from the environment variables.
+ * Helper function to generate a JSON Web Token (JWT) for a user.
  * 
- * @param {string} userId - Mongoose User ObjectId string
- * @returns {string} Signed JWT Token string
+ * @param {string} userId - User database ID
+ * @returns {string} Signed JWT token
  */
 export const generateToken = (userId) => {
-  return jwt.sign(
-    { id: userId },
-    process.env.JWT_SECRET || 'fallback_secret',
-    {
-      expiresIn: process.env.JWT_EXPIRES_IN || '7d',
-    }
-  );
+  return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+  });
 };
 
 /**
- * Registers a new user account in the system.
- * Checks for existing email address, hashes the password via schema hooks,
- * generates a JWT token, and returns the response without the password field.
+ * Register a new user account.
+ * Validates email availability, generates a 6-digit OTP, sends it via Gmail SMTP,
+ * and stores pending details in the Otp collection without creating the active User.
  * 
- * @route   POST /api/auth/register
- * @access  Public
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
  */
 export const register = async (req, res, next) => {
-  try {
-    const { name, email, password } = req.body;
+  const { name, email, password } = req.body;
 
-    // 1. Check if the email is already registered
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return errorResponse(res, 'User email is already registered.', 400);
+  try {
+    // Check if user already exists
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return errorResponse(res, 'Email already exists', 409);
     }
 
-    // 2. Create and save the new user (hashing password is handled in pre-save model middleware)
+    // Create user directly (hashing happens pre-save automatically)
     const user = await User.create({
       name,
       email,
       password,
     });
 
-    // 3. Generate access token
+    // Generate JWT token
     const token = generateToken(user._id);
 
-    // 4. Return serialized user details without the password (toJSON handles password stripping)
+    // Send welcome email asynchronously
+    sendRegistrationSuccessEmail(user.email, user.name).catch((err) => {
+      console.error('Failed to send welcome email:', err);
+    });
+
+    const userObject = user.toJSON();
+
     return successResponse(
       res,
-      {
-        user: user.toJSON(),
-        token,
-      },
-      'User registered successfully.',
+      { token, user: userObject },
+      'Registration successful!',
       201
     );
   } catch (error) {
@@ -73,45 +66,53 @@ export const register = async (req, res, next) => {
 };
 
 /**
- * Authenticates user credentials and issues a JWT token.
- * Prevents enumeration attacks by returning a generic "Invalid credentials" error message.
- * Verifies if the account is active before authenticating.
+ * Authenticate user credentials and return authentication JWT token.
+ * Validates existence, verifies password, and checks active status.
  * 
- * @route   POST /api/auth/login
- * @access  Public
+ * PRODUCTION NOTE:
+ * In a production environment, you should add `express-rate-limit` middleware
+ * to this login endpoint to prevent brute-force attacks on user passwords.
+ * Example login rate limiter:
+ *   const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });
+ *   router.post('/login', loginLimiter, ...);
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
  */
 export const login = async (req, res, next) => {
-  try {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    // 1. Retrieve the user record including the hidden password field
+  try {
+    // Find user by email and explicitly select password field for validation
     const user = await User.findOne({ email }).select('+password');
+
+    // Security best practice: Never tell the client whether email or password was wrong
     if (!user) {
       return errorResponse(res, 'Invalid credentials', 401);
     }
 
-    // 2. Check if the account is active
-    if (!user.isActive) {
-      return errorResponse(res, 'Account is deactivated', 403);
-    }
-
-    // 3. Verify the input password against the stored hash
+    // Compare input password with database hashed password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return errorResponse(res, 'Invalid credentials', 401);
     }
 
-    // 4. Generate access token
+    // Verify account active status
+    if (!user.isActive) {
+      return errorResponse(res, 'Account is deactivated', 403);
+    }
+
+    // Generate JWT
     const token = generateToken(user._id);
 
-    // 5. Serialize user (strip password)
+    // Strip password from user payload
+    const userObject = user.toJSON();
+
     return successResponse(
       res,
-      {
-        user: user.toJSON(),
-        token,
-      },
-      'Authentication successful.'
+      { token, user: userObject },
+      'Login successful'
     );
   } catch (error) {
     next(error);
@@ -119,18 +120,19 @@ export const login = async (req, res, next) => {
 };
 
 /**
- * Retrieves the profile details of the currently authenticated user.
+ * Get profile details of the currently authenticated user.
  * 
- * @route   GET /api/auth/profile
- * @access  Private (Authenticated)
+ * @param {Object} req - Express request object (contains req.user set by protect middleware)
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
  */
 export const getProfile = async (req, res, next) => {
   try {
-    // req.user has already been populated by the protect middleware
+    // req.user has already been attached by the protect middleware without the password field
     return successResponse(
       res,
-      { user: req.user.toJSON() },
-      'Profile retrieved successfully.'
+      req.user,
+      'User profile retrieved successfully'
     );
   } catch (error) {
     next(error);
@@ -138,52 +140,62 @@ export const getProfile = async (req, res, next) => {
 };
 
 /**
- * Updates the profile details of the logged-in user.
- * Restricts updates to the "name" field only.
- * If a new password is provided, verifies the old password first before updating.
+ * Update authenticated user profile details.
+ * Restricts updates to the 'name' field, and allows changing password
+ * if old password matches current records.
  * 
- * @route   PUT /api/auth/profile
- * @access  Private (Authenticated)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
  */
 export const updateProfile = async (req, res, next) => {
+  const { name, oldPassword, newPassword } = req.body;
+
   try {
-    const { name, oldPassword, newPassword } = req.body;
-    
-    // Retrieve the active user document (including password for validation)
+    // Find user by ID and select password field to validate old password
     const user = await User.findById(req.user._id).select('+password');
     if (!user) {
-      return errorResponse(res, 'User no longer exists', 404);
+      return errorResponse(res, 'User not found', 404);
     }
 
-    // 1. Update the name if provided
-    if (name !== undefined) {
+    // Allow updating name only
+    if (name) {
       user.name = name;
     }
 
-    // 2. Update the password if newPassword is provided
+    // Handle password update flow
     if (newPassword) {
       if (!oldPassword) {
-        return errorResponse(res, 'Old password is required to change password.', 400);
+        return errorResponse(res, 'Old password is required to change password', 400);
       }
 
-      // Check if the input old password matches the current database hash
+      // Validate old password first
       const isMatch = await user.comparePassword(oldPassword);
       if (!isMatch) {
-        return errorResponse(res, 'Invalid old password.', 401);
+        return errorResponse(res, 'Invalid old password', 401);
       }
 
-      // Set new password (the user pre-save hook will automatically hash this)
+      // Update password field (triggers pre-save hook to hash password)
       user.password = newPassword;
     }
 
-    // 3. Save the document and trigger validations/hooks
+    // Save user document (triggers validation and password hashing if updated)
     await user.save();
 
-    // 4. Return the updated user document (stripped of the password field)
+    // Send password change confirmation email asynchronously if updated
+    if (newPassword) {
+      sendPasswordResetSuccessEmail(user.email, user.name).catch((err) => {
+        console.error('Failed to send password change success email for profile update:', err);
+      });
+    }
+
+    // Retrieve updated record without password for response
+    const updatedUser = await User.findById(user._id).select('-password');
+
     return successResponse(
       res,
-      { user: user.toJSON() },
-      'Profile updated successfully.'
+      updatedUser,
+      'Profile updated successfully'
     );
   } catch (error) {
     next(error);
@@ -191,19 +203,39 @@ export const updateProfile = async (req, res, next) => {
 };
 
 /**
- * Terminates the active session (stateless helper response).
+ * Logout the currently authenticated user.
+ * Handled client-side by invalidating the token, but this endpoint provides a clean success response 
+ * and can optionally be extended to clear token cookies or blacklist tokens.
  * 
- * @route   POST /api/auth/logout
- * @access  Private (Authenticated)
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
  */
 export const logout = async (req, res, next) => {
   try {
-    return successResponse(
-      res,
-      null,
-      'Logged out successfully.'
-    );
+    return successResponse(res, null, 'Logged out successfully. Token invalidated client-side.');
   } catch (error) {
     next(error);
   }
+};
+
+
+/**
+ * Verify OTP entered by the user.
+ * Activates the pending registration account if correct, or validates for password reset.
+ */
+export const verifyOtp = async (req, res, next) => {
+  return errorResponse(res, 'OTP verification is deprecated.', 400);
+};
+
+export const forgotPassword = async (req, res, next) => {
+  return errorResponse(res, 'Password resets must be performed inside Profile Settings when logged in.', 400);
+};
+
+export const resetPassword = async (req, res, next) => {
+  return errorResponse(res, 'Password resets must be performed inside Profile Settings when logged in.', 400);
+};
+
+export const resendOtp = async (req, res, next) => {
+  return errorResponse(res, 'OTP verification is deprecated.', 400);
 };

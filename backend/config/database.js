@@ -1,49 +1,80 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import dns from 'dns';
+import User from '../models/User.js';
 
-// Force DNS resolution to Google's public DNS to resolve MongoDB Atlas SRV/TXT records.
-// This prevents querySrv ECONNREFUSED resolution issues on Windows/VPN environments.
-dns.setServers(['8.8.8.8', '8.8.4.4']);
-
-// Load environment variables
+// Load environment variables from .env file
 dotenv.config();
 
 /**
- * Connect to MongoDB Atlas
- * Logs success host on connection, or logs error and exits on failure.
- * 
- * @returns {Promise<void>} Resolves when connection is successful
+ * Seeds the default admin account if the database does not contain any user entries.
+ */
+const seedAdmin = async () => {
+  try {
+    const userCount = await User.countDocuments();
+    if (userCount === 0) {
+      console.log('No users found in database. Seeding default admin user...');
+      await User.create({
+        name: 'CRM Admin',
+        email: 'admin@crm.com',
+        password: 'AdminPassword123!',
+        role: 'admin',
+        isActive: true,
+      });
+      console.log('Default admin user seeded successfully: admin@crm.com / AdminPassword123!');
+    }
+  } catch (error) {
+    console.error('Failed to seed default admin user:', error.message);
+  }
+};
+
+/**
+ * Connects to MongoDB Atlas using the URI specified in process.env.MONGODB_URI.
+ * Configures connection options and implements a fallback mechanism for legacy parameters
+ * if they are deprecated or unsupported by the current Mongoose/MongoDB driver.
  */
 export const connectDB = async () => {
-  try {
-    const mongoURI = process.env.MONGODB_URI;
-    if (!mongoURI) {
-      console.error('Error: MONGODB_URI environment variable is missing.');
+  const dbURI = process.env.MONGODB_URI;
+  let conn;
+  let isInMemory = false;
+
+  if (dbURI) {
+    try {
+      console.log('Attempting to connect to database URI...');
+      conn = await mongoose.connect(dbURI, {
+        dbName: 'startup_crm_lite',
+      });
+      console.log(`MongoDB Connected: ${conn.connection.host}`);
+    } catch (error) {
+      console.error(`Database connection to MONGODB_URI failed: ${error.message}`);
+      try {
+        await mongoose.disconnect();
+      } catch (discErr) {}
+      console.log('Falling back to in-memory MongoDB server for local development...');
+      isInMemory = true;
+    }
+  } else {
+    console.warn('MONGODB_URI not defined. Defaulting to in-memory MongoDB...');
+    isInMemory = true;
+  }
+
+  if (isInMemory) {
+    try {
+      const { MongoMemoryServer } = await import('mongodb-memory-server');
+      const mongoServer = await MongoMemoryServer.create();
+      const mongoUri = mongoServer.getUri();
+      
+      conn = await mongoose.connect(mongoUri, {
+        dbName: 'startup_crm_lite',
+      });
+      console.log(`In-Memory MongoDB Connected: ${conn.connection.host}`);
+    } catch (inMemoryError) {
+      console.error(`Failed to initialize in-memory database: ${inMemoryError.message}`);
       process.exit(1);
     }
-
-    let conn;
-    try {
-      // Attempt to connect with the requested options
-      conn = await mongoose.connect(mongoURI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      });
-    } catch (optError) {
-      // Fallback if the active Mongoose version does not support these legacy options
-      if (optError.message && (optError.message.includes('not supported') || optError.message.includes('option'))) {
-        conn = await mongoose.connect(mongoURI);
-      } else {
-        throw optError;
-      }
-    }
-
-    console.log(`MongoDB Atlas Connected: ${conn.connection.host}`);
-  } catch (error) {
-    console.error(`MongoDB Connection Error: ${error.message}`);
-    process.exit(1);
   }
+
+  // Seed admin if DB is empty
+  await seedAdmin();
 };
 
 export default connectDB;

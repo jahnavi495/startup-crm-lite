@@ -2,45 +2,67 @@ import React from 'react';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 
 /**
- * @typedef {Object} StatsCardProps
- * @property {string} title - KPI label shown above the metric.
- * @property {string|number} value - Main numeric or text metric.
- * @property {React.ElementType} icon - Lucide icon component.
- * @property {number} change - Percentage change vs the previous month.
- * @property {string} color - Tailwind color token used for the card accent.
- */
-
-/**
  * StatsCard Component
- * Renders a premium KPI card with an icon, a large value, and a change indicator.
- *
- * @param {StatsCardProps} props
+ * Displays a single key performance indicator (KPI) metric box.
+ * Styles cards as custom Glassmorphism components with premium ambient accents.
  */
-const StatsCard = ({ title, value, icon: Icon, change, color = 'bg-primary' }) => {
+const StatsCard = ({ index = 0, title, value, icon: Icon, change }) => {
   const isPositive = change >= 0;
 
+  // Curated premium color schemes for each card
+  const colorSchemes = [
+    {
+      text: 'text-blue-600 dark:text-blue-400',
+      iconBg: 'bg-blue-500/10 dark:bg-blue-500/20 text-blue-605 dark:text-blue-400',
+      glow: 'shadow-blue-500/2 dark:shadow-blue-500/5 border-blue-500/10 dark:border-blue-500/15',
+    },
+    {
+      text: 'text-purple-600 dark:text-purple-400',
+      iconBg: 'bg-purple-500/10 dark:bg-purple-500/20 text-purple-605 dark:text-purple-400',
+      glow: 'shadow-purple-500/2 dark:shadow-purple-500/5 border-purple-500/10 dark:border-purple-500/15',
+    },
+    {
+      text: 'text-amber-605 dark:text-amber-400',
+      iconBg: 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-605 dark:text-amber-400',
+      glow: 'shadow-amber-500/2 dark:shadow-amber-500/5 border-amber-500/10 dark:border-amber-500/15',
+    },
+    {
+      text: 'text-emerald-600 dark:text-emerald-400',
+      iconBg: 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-605 dark:text-emerald-400',
+      glow: 'shadow-emerald-500/2 dark:shadow-emerald-500/5 border-emerald-500/10 dark:border-emerald-500/15',
+    },
+  ];
+
+  const theme = colorSchemes[index % colorSchemes.length];
+
   return (
-    <div className={`rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)] transition-all duration-200 hover:-translate-y-1 dark:border-slate-800 dark:bg-slate-900`}> 
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
-            {title}
-          </p>
-          <p className="mt-3 text-2xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
-            {value}
-          </p>
-        </div>
-        <div className={`rounded-2xl p-2.5 ${color} text-white shadow-sm`}>
-          <Icon className="h-5 w-5" />
+    <div className={`p-6 rounded-2xl glass-card border transition-all duration-300 hover:shadow-lg flex flex-col justify-between ${theme.glow}`}>
+      {/* Top row: metric title & accent icon container */}
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 select-none">
+          {title}
+        </span>
+        <div className={`p-2 rounded-xl transition-all duration-300 ${theme.iconBg}`}>
+          <Icon size={16} strokeWidth={2.5} />
         </div>
       </div>
-
-      <div className="mt-4 flex items-center gap-2 text-sm font-medium">
-        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 ${isPositive ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400'}`}>
-          {isPositive ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
+      
+      {/* Big KPI Metric number */}
+      <div className="mt-4">
+        <h4 className="text-2xl font-black tracking-tight sm:text-3xl text-slate-900 dark:text-white">
+          {value}
+        </h4>
+      </div>
+ 
+      {/* Percentage change trend block */}
+      <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold">
+        <span className={`inline-flex items-center gap-0.5 ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
+          {isPositive ? <TrendingUp size={13} strokeWidth={2.5} /> : <TrendingDown size={13} strokeWidth={2.5} />}
           <span>{isPositive ? '+' : ''}{change}%</span>
         </span>
-        <span className="text-slate-500 dark:text-slate-400">vs last month</span>
+        <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+          vs last month
+        </span>
       </div>
     </div>
   );

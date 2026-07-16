@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, BarChart3, ArrowLeft, HelpCircle } from 'lucide-react';
+import useDocumentMetadata from '../hooks/useDocumentMetadata';
 
 /**
  * NotFound Component
@@ -9,6 +10,11 @@ import { LayoutDashboard, Users, BarChart3, ArrowLeft, HelpCircle } from 'lucide
  */
 const NotFound = () => {
   const navigate = useNavigate();
+
+  useDocumentMetadata(
+    'Page Not Found | StartupCRM',
+    'The page you are looking for does not exist on StartupCRM.'
+  );
 
   const navOptions = [
     {
@@ -127,9 +133,9 @@ const NotFound = () => {
               key={opt.path}
               type="button"
               onClick={() => navigate(opt.path)}
-              className="group p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-primary dark:hover:border-primary/50 hover:shadow-md rounded-2xl text-left cursor-pointer transition-all duration-200 hover:-translate-y-0.5 focus:outline-hidden"
+              className="group p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-primary dark:hover:border-primary/50 hover:shadow-md rounded-2xl text-left cursor-pointer transition-all duration-200 focus:outline-hidden"
             >
-              <div className={`p-2.5 w-fit rounded-xl border ${opt.color} group-hover:scale-105 transition-transform duration-200`}>
+              <div className={`p-2.5 w-fit rounded-xl border ${opt.color} transition-transform duration-200`}>
                 <Icon size={16} />
               </div>
               <h4 className="text-xs sm:text-sm font-bold text-slate-905 dark:text-white mt-4 group-hover:text-primary transition-colors">
@@ -155,7 +161,7 @@ const NotFound = () => {
         </button>
         <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
         <a
-          href="mailto:support@auracrm.com"
+          href="mailto:support@StartupCRM.com"
           className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-655 dark:text-slate-400 hover:text-primary dark:hover:text-white transition-colors duration-150"
         >
           <HelpCircle size={16} />
@@ -168,3 +174,4 @@ const NotFound = () => {
 };
 
 export default NotFound;
+

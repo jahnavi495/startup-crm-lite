@@ -1,305 +1,325 @@
 import Lead from '../models/Lead.js';
-import { successResponse, errorResponse, paginatedResponse } from '../utils/apiResponse.js';
+import { successResponse, errorResponse } from '../utils/apiResponse.js';
 
 /**
- * @desc    Get paginated, search-filtered leads belonging to the logged-in user with dynamic parameters
+ * @desc    Get all leads for the authenticated user with filtering, sorting, and pagination
  * @route   GET /api/leads
  * @access  Private
- * 
- * Inputs:
- *   - req.query: { page, limit, sortBy, sortOrder, status, search, source, dateFrom, dateTo }
- *   - req.user: Authenticated user object
- * Outputs:
- *   - 200: JSON success payload containing paginated leads array and pagination headers
+ * @input   req.query: { status, search, source, dateFrom, dateTo, page = 1, limit = 20, sortBy = 'createdAt', sortOrder = 'desc' }
+ * @output  JSON paginated response containing matching lead documents and pagination metadata
+ * @sideEffect None
  */
 export const getLeads = async (req, res, next) => {
   try {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[getLeads] Fetching leads for user: ${req.user._id}`);
+    }
+
     const {
-      page = 1,
-      limit = 20,
-      sortBy = 'createdAt',
-      sortOrder = 'desc',
       status,
       search,
       source,
       dateFrom,
       dateTo,
+      page = 1,
+      limit = 20,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
     } = req.query;
 
-    // Enforce owner isolation
+    // Filter initialized with owner isolation logic
     const filter = { owner: req.user._id };
 
-    // 1. Filter by status stage (if not 'All' or empty)
+    // Apply status filter if provided and is not 'All'
     if (status && status !== 'All') {
       filter.status = status;
     }
 
-    // 2. Filter by acquisition source channel
-    if (source) {
+    // Apply source filter if provided and is not 'All'
+    if (source && source !== 'All') {
       filter.source = source;
     }
 
-    // 3. Filter by date created range (dateFrom <= createdAt <= dateTo)
+    // Apply regex search against contact name, company, or email
+    if (search) {
+      const searchRegex = new RegExp(search, 'i');
+      filter.$or = [
+        { name: searchRegex },
+        { company: searchRegex },
+        { email: searchRegex },
+      ];
+    }
+
+    // Apply date range filter on createdAt
     if (dateFrom || dateTo) {
       filter.createdAt = {};
       if (dateFrom) {
         filter.createdAt.$gte = new Date(dateFrom);
       }
       if (dateTo) {
-        const endOfDay = new Date(dateTo);
-        endOfDay.setHours(23, 59, 59, 999); // cover full day up to the final millisecond
-        filter.createdAt.$lte = endOfDay;
+        filter.createdAt.$lte = new Date(dateTo);
       }
     }
 
-    // 4. Filter by search keyword query (case-insensitive regex check on name, company, email)
-    if (search) {
-      filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { company: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
-      ];
-    }
+    // Parse pagination parameters
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 20;
+    const skipNum = (pageNum - 1) * limitNum;
 
-    const pageNum = Number(page) || 1;
-    const limitNum = Number(limit) || 20;
-    const skip = (pageNum - 1) * limitNum;
-    const sortVal = sortOrder === 'desc' ? -1 : 1;
+    // Configure sorting
+    const sort = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[Lead Controller] User ${req.user._id} querying filtered leads. Filter:`, JSON.stringify(filter));
-    }
-
+    // Run query and document counter in parallel
     const [leads, total] = await Promise.all([
       Lead.find(filter)
-        .sort({ [sortBy]: sortVal })
-        .skip(skip)
+        .sort(sort)
+        .skip(skipNum)
         .limit(limitNum),
       Lead.countDocuments(filter),
     ]);
 
-    return paginatedResponse(res, leads, total, pageNum, limitNum);
+    const totalPages = Math.ceil(total / limitNum);
+
+    return res.status(200).json({
+      success: true,
+      data: leads,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        pages: totalPages,
+        hasNext: pageNum < totalPages,
+        hasPrev: pageNum > 1,
+      },
+    });
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * @desc    Create a new lead opportunity scoped to the active user
+ * @desc    Create a new lead assigned to the authenticated user
  * @route   POST /api/leads
  * @access  Private
- * 
- * Inputs:
- *   - req.body: Lead fields (name, company, email, phone, value, status, source, notes)
- *   - req.user: Authenticated user object
- * Outputs:
- *   - 201: JSON success payload containing the newly created Lead document
+ * @input   req.body: { name, company, email, phone, status, source, value, notes }
+ * @output  JSON success response with the newly created lead document
+ * @sideEffect Inserts new lead record into the database
  */
 export const createLead = async (req, res, next) => {
   try {
-    const { name, company, email, phone, value, status, source, notes } = req.body;
-
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[Lead Controller] User ${req.user._id} initiating lead creation for: "${name}"`);
+      console.log(`[createLead] Creating lead for user: ${req.user._id}`);
     }
 
+    const { name, company, email, phone, status, source, value, notes } = req.body;
+
+    // Build the new lead object with owner isolation
     const lead = await Lead.create({
       name,
       company,
       email,
       phone,
-      value: value !== undefined ? Number(value) : 0,
-      status,
-      source,
+      status: status || 'New',
+      source: source || 'Website',
+      value: value || 0,
       notes,
       owner: req.user._id,
     });
 
-    return successResponse(res, lead, 'Lead created successfully.', 201);
+    return successResponse(res, lead, 'Lead created successfully', 201);
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * @desc    Fetch details of a single lead by its identifier with owner isolation
+ * @desc    Retrieve details of a specific lead by ID
  * @route   GET /api/leads/:id
  * @access  Private
- * 
- * Inputs:
- *   - req.params.id: MongoDB ObjectId string of target lead
- *   - req.user: Authenticated user object
- * Outputs:
- *   - 200: JSON success payload containing the requested Lead document
- *   - 404: If lead is missing or belongs to a different owner
+ * @input   req.params.id: Lead ID
+ * @output  JSON success response containing the found lead document
+ * @sideEffect None
  */
 export const getLeadById = async (req, res, next) => {
   try {
-    const lead = await Lead.findOne({ _id: req.params.id, owner: req.user._id });
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[getLeadById] Fetching lead ${req.params.id} for user: ${req.user._id}`);
+    }
+
+    // Query filters by both lead ID and the owner ID to isolate records
+    const lead = await Lead.findOne({
+      _id: req.params.id,
+      owner: req.user._id,
+    });
 
     if (!lead) {
       return errorResponse(res, 'Lead not found', 404);
     }
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[Lead Controller] User ${req.user._id} fetched lead: ${req.params.id}`);
-    }
-
-    return successResponse(res, lead, 'Lead retrieved successfully.');
+    return successResponse(res, lead, 'Lead retrieved successfully');
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * @desc    Modify fields of a lead ensuring owner isolation
+ * @desc    Update an existing lead's fields
  * @route   PUT /api/leads/:id
  * @access  Private
- * 
- * Inputs:
- *   - req.params.id: Target lead ID
- *   - req.body: Lead fields to update (excludes owner modification)
- * Outputs:
- *   - 200: JSON success payload containing the updated Lead document
- *   - 404: If lead is missing or belongs to a different owner
+ * @input   req.params.id: Lead ID, req.body: field updates (excluding owner)
+ * @output  JSON success response containing the updated lead document
+ * @sideEffect Updates a lead record in the database
  */
 export const updateLead = async (req, res, next) => {
   try {
-    // Force prevent changing lead ownership
-    const updateData = { ...req.body };
-    delete updateData.owner;
-
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[Lead Controller] User ${req.user._id} updating lead: ${req.params.id}`);
+      console.log(`[updateLead] Updating lead ${req.params.id} for user: ${req.user._id}`);
     }
 
-    const lead = await Lead.findOneAndUpdate(
+    const updateData = { ...req.body };
+
+    // Prevent changing the lead's owner
+    delete updateData.owner;
+
+    // Find and update lead matching ID and owner, executing validations on the updates
+    const updatedLead = await Lead.findOneAndUpdate(
       { _id: req.params.id, owner: req.user._id },
       updateData,
       { new: true, runValidators: true }
     );
 
-    if (!lead) {
+    if (!updatedLead) {
       return errorResponse(res, 'Lead not found', 404);
     }
 
-    return successResponse(res, lead, 'Lead updated successfully.');
+    return successResponse(res, updatedLead, 'Lead updated successfully');
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * @desc    Patch only the status stage of a specific lead record with owner checks
+ * @desc    Update only the status of a specific lead
  * @route   PATCH /api/leads/:id/status
  * @access  Private
- * 
- * Inputs:
- *   - req.params.id: Target lead ID
- *   - req.body: { status } - New lifecycle status stage value
- * Outputs:
- *   - 200: JSON success payload containing the updated Lead document
- *   - 404: If lead is missing or belongs to a different owner
+ * @input   req.params.id: Lead ID, req.body: { status }
+ * @output  JSON success response containing the updated lead document
+ * @sideEffect Updates a lead's status in the database
  */
 export const updateLeadStatus = async (req, res, next) => {
   try {
-    const { status } = req.body;
-
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[Lead Controller] User ${req.user._id} patching status of lead ${req.params.id} to "${status}"`);
+      console.log(`[updateLeadStatus] Updating status of lead ${req.params.id} for user: ${req.user._id}`);
     }
 
-    const lead = await Lead.findOneAndUpdate(
+    const { status } = req.body;
+
+    // Find and update in a single operation
+    const updatedLead = await Lead.findOneAndUpdate(
       { _id: req.params.id, owner: req.user._id },
       { status },
       { new: true, runValidators: true }
     );
 
-    if (!lead) {
+    if (!updatedLead) {
       return errorResponse(res, 'Lead not found', 404);
     }
 
-    return successResponse(res, lead, 'Lead status updated successfully.');
+    return successResponse(res, updatedLead, 'Lead status updated successfully');
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * @desc    Remove a lead record from database with owner verification
+ * @desc    Delete a lead from the CRM
  * @route   DELETE /api/leads/:id
  * @access  Private
- * 
- * Inputs:
- *   - req.params.id: Target lead ID to delete
- * Outputs:
- *   - 200: JSON success response confirming removal
- *   - 404: If lead is missing or belongs to a different owner
+ * @input   req.params.id: Lead ID
+ * @output  JSON success response with delete confirmation payload
+ * @sideEffect Deletes a lead record from the database
  */
 export const deleteLead = async (req, res, next) => {
   try {
-    const lead = await Lead.findOne({ _id: req.params.id, owner: req.user._id });
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[deleteLead] Deleting lead ${req.params.id} for user: ${req.user._id}`);
+    }
+
+    const lead = await Lead.findOne({
+      _id: req.params.id,
+      owner: req.user._id,
+    });
 
     if (!lead) {
       return errorResponse(res, 'Lead not found', 404);
     }
 
+    // Call document delete to trigger any pre-delete Mongoose middleware if needed
     await lead.deleteOne();
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[Lead Controller] User ${req.user._id} deleted lead: ${req.params.id}`);
-    }
-
-    return successResponse(res, null, 'Lead deleted successfully');
+    return successResponse(res, { id: req.params.id }, 'Lead deleted successfully');
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * @desc    Aggregate lead records to compile dashboard KPIs in a SINGLE database query
+ * @desc    Calculate aggregate KPIs and status counts for the user's dashboard cards
  * @route   GET /api/leads/stats/summary
  * @access  Private
- * 
- * Inputs:
- *   - req.user: Authenticated user object
- * Outputs:
- *   - 200: JSON success response containing stats payload with pipeline volumes, growth rate, and breakdowns
+ * @input   None
+ * @output  JSON success response containing KPI metrics and status distribution counts
+ * @sideEffect None
  */
 export const getLeadStats = async (req, res, next) => {
   try {
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[Lead Controller] User ${req.user._id} compiling dashboard aggregations.`);
+      console.log(`[getLeadStats] Aggregating dashboard stats for user: ${req.user._id}`);
     }
 
-    const today = new Date();
-    // Boundaries for this calendar month and previous calendar month
-    const startOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const startOfLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-    const endOfLastMonth = startOfThisMonth;
+    const now = new Date();
+    const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
 
-    // Single-operation DB aggregation query
+    // Run match and conditional facets in a single database aggregation query
     const statsResult = await Lead.aggregate([
       { $match: { owner: req.user._id } },
       {
         $facet: {
-          totalLeads: [
-            { $count: 'count' }
-          ],
-          statusCounts: [
-            { $group: { _id: '$status', count: { $sum: 1 } } }
-          ],
-          sourceCounts: [
-            { $group: { _id: '$source', count: { $sum: 1 } } }
-          ],
-          monthlyCounts: [
+          summary: [
             {
               $group: {
                 _id: null,
+                totalLeads: { $sum: 1 },
+                wonLeads: { $sum: { $cond: [{ $eq: ['$status', 'Won'] }, 1, 0] } },
+                lostLeads: { $sum: { $cond: [{ $eq: ['$status', 'Lost'] }, 1, 0] } },
+                pipelineValue: {
+                  $sum: {
+                    $cond: [
+                      { $and: [{ $ne: ['$status', 'Won'] }, { $ne: ['$status', 'Lost'] }] },
+                      { $ifNull: ['$value', 0] },
+                      0,
+                    ],
+                  },
+                },
+                wonRevenue: {
+                  $sum: {
+                    $cond: [
+                      { $eq: ['$status', 'Won'] },
+                      { $ifNull: ['$value', 0] },
+                      0,
+                    ],
+                  },
+                },
                 thisMonthLeads: {
                   $sum: {
-                    $cond: [{ $gte: ['$createdAt', startOfThisMonth] }, 1, 0]
-                  }
+                    $cond: [
+                      { $gte: ['$createdAt', startOfThisMonth] },
+                      1,
+                      0,
+                    ],
+                  },
                 },
                 lastMonthLeads: {
                   $sum: {
@@ -307,230 +327,239 @@ export const getLeadStats = async (req, res, next) => {
                       {
                         $and: [
                           { $gte: ['$createdAt', startOfLastMonth] },
-                          { $lt: ['$createdAt', endOfLastMonth] }
-                        ]
+                          { $lte: ['$createdAt', endOfLastMonth] },
+                        ],
                       },
                       1,
-                      0
-                    ]
-                  }
-                }
-              }
-            }
-          ]
-        }
-      }
+                      0,
+                    ],
+                  },
+                },
+              },
+            },
+          ],
+          statusBreakdown: [
+            { $group: { _id: '$status', count: { $sum: 1 } } },
+          ],
+          sourceBreakdown: [
+            { $group: { _id: '$source', count: { $sum: 1 } } },
+          ],
+        },
+      },
     ]);
 
-    const facet = statsResult[0];
-    const totalLeadsCount = (facet.totalLeads && facet.totalLeads[0]) ? facet.totalLeads[0].count : 0;
+    const summary = statsResult[0]?.summary[0] || {
+      totalLeads: 0,
+      wonLeads: 0,
+      lostLeads: 0,
+      pipelineValue: 0,
+      wonRevenue: 0,
+      thisMonthLeads: 0,
+      lastMonthLeads: 0,
+    };
 
-    // Compile status breakdown counts map
+    const totalLeads = summary.totalLeads;
+    const won = summary.wonLeads;
+    const lost = summary.lostLeads;
+    const pipelineValue = summary.pipelineValue;
+    const wonRevenue = summary.wonRevenue;
+    const thisMonthLeads = summary.thisMonthLeads;
+    const lastMonthLeads = summary.lastMonthLeads;
+
+    // Calculate conversionRate & lostRate: (won / total) * 100, rounded to 1 decimal
+    const conversionRate = totalLeads > 0 ? parseFloat(((won / totalLeads) * 100).toFixed(1)) : 0;
+    const lostRate = totalLeads > 0 ? Math.round((lost / totalLeads) * 100) : 0;
+
+    // Calculate growthRate: ((thisMonth - lastMonth) / lastMonth) * 100, safe division
+    let growthRate = 0;
+    if (lastMonthLeads > 0) {
+      growthRate = parseFloat((((thisMonthLeads - lastMonthLeads) / lastMonthLeads) * 100).toFixed(1));
+    } else if (thisMonthLeads > 0) {
+      growthRate = 100;
+    }
+
+    // Convert statusBreakdown array to object
     const statusBreakdown = {
       New: 0,
       Contacted: 0,
+      Qualified: 0,
       'Meeting Scheduled': 0,
       'Proposal Sent': 0,
+      Negotiation: 0,
       Won: 0,
-      Lost: 0
+      Lost: 0,
     };
-    if (facet.statusCounts) {
-      facet.statusCounts.forEach((item) => {
-        if (item._id && item._id in statusBreakdown) {
-          statusBreakdown[item._id] = item.count;
-        }
-      });
-    }
+    statsResult[0]?.statusBreakdown.forEach((item) => {
+      if (item._id && item._id in statusBreakdown) {
+        statusBreakdown[item._id] = item.count;
+      }
+    });
 
-    // Compile source breakdown counts map
+    // Convert sourceBreakdown array to object
     const sourceBreakdown = {
       Website: 0,
       Referral: 0,
       LinkedIn: 0,
       'Cold Call': 0,
       'Email Campaign': 0,
-      Other: 0
+      Facebook: 0,
+      Instagram: 0,
+      'Google Ads': 0,
+      Other: 0,
     };
-    if (facet.sourceCounts) {
-      facet.sourceCounts.forEach((item) => {
-        if (item._id && item._id in sourceBreakdown) {
-          sourceBreakdown[item._id] = item.count;
-        }
-      });
-    }
+    statsResult[0]?.sourceBreakdown.forEach((item) => {
+      if (item._id && item._id in sourceBreakdown) {
+        sourceBreakdown[item._id] = item.count;
+      }
+    });
 
-    // Extract current/prior calendar month leads counts
-    const monthlyData = (facet.monthlyCounts && facet.monthlyCounts[0])
-      ? facet.monthlyCounts[0]
-      : { thisMonthLeads: 0, lastMonthLeads: 0 };
-
-    const thisMonthLeads = monthlyData.thisMonthLeads;
-    const lastMonthLeads = monthlyData.lastMonthLeads;
-
-    // Calculate month-over-month growth rate percentage
-    let growthRate = 0.0;
-    if (lastMonthLeads > 0) {
-      growthRate = Number((((thisMonthLeads - lastMonthLeads) / lastMonthLeads) * 100).toFixed(1));
-    } else if (thisMonthLeads > 0) {
-      growthRate = 100.0; // 100% growth from zero base
-    }
-
-    // Calculate overall pipeline conversion rate (Won / Total) * 100
-    const wonCount = statusBreakdown.Won;
-    const conversionRate = totalLeadsCount > 0
-      ? Number(((wonCount / totalLeadsCount) * 100).toFixed(1))
-      : 0.0;
-
-    const statsPayload = {
-      totalLeads: totalLeadsCount,
-      statusBreakdown,
+    const finalStats = {
+      totalLeads,
+      wonLeads: won,
+      lostLeads: lost,
       conversionRate,
-      sourceBreakdown,
+      lostRate,
+      pipelineValue,
+      wonRevenue,
+      averageSalesCycle: 0, // Placeholder to prevent breaking any component UI expectations
       thisMonthLeads,
       lastMonthLeads,
-      growthRate
+      growthRate,
+      statusBreakdown,
+      sourceBreakdown,
     };
 
-    return successResponse(res, statsPayload, 'Statistics compiled successfully.');
+    return successResponse(res, finalStats, 'Lead stats retrieved successfully');
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * @desc    Aggregate leads grouped by month for the last 6 months in chronological order
+ * @desc    Aggregate leads grouped by month for the last 6 months for trend charts
  * @route   GET /api/leads/stats/monthly
  * @access  Private
- * 
- * Inputs:
- *   - req.user: Authenticated user object
- * Outputs:
- *   - 200: JSON success payload containing sorted list of monthly stats including zeroes
+ * @input   None
+ * @output  JSON success response with a chronologically ordered array of monthly counts
+ * @sideEffect None
  */
 export const getMonthlyStats = async (req, res, next) => {
   try {
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[Lead Controller] User ${req.user._id} generating monthly trends.`);
+      console.log(`[getMonthlyStats] Generating monthly analytics for user: ${req.user._id}`);
     }
 
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const today = new Date();
+    // Set timeline window boundary: start of the month 6 months ago
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+    sixMonthsAgo.setDate(1);
+    sixMonthsAgo.setHours(0, 0, 0, 0);
 
-    // 1. Generate chronological list of the last 6 months including current month
-    const last6Months = [];
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
-      last6Months.push({
-        year: d.getFullYear(),
-        monthNum: d.getMonth() + 1, // 1-indexed for MongoDB month matching
-        monthName: monthNames[d.getMonth()],
-        label: `${monthNames[d.getMonth()]} ${d.getFullYear()}`,
-        total: 0,
-        won: 0,
-        lost: 0
-      });
-    }
-
-    // Align matching interval beginning boundary
-    const startOfPeriod = new Date(today.getFullYear(), today.getMonth() - 5, 1);
-
-    // 2. Query aggregate status counts
-    const results = await Lead.aggregate([
+    // Group leads in range by creation year and month
+    const monthlyStats = await Lead.aggregate([
       {
         $match: {
           owner: req.user._id,
-          createdAt: { $gte: startOfPeriod }
-        }
+          createdAt: { $gte: sixMonthsAgo },
+        },
       },
       {
         $group: {
           _id: {
             year: { $year: '$createdAt' },
-            month: { $month: '$createdAt' }
+            month: { $month: '$createdAt' },
           },
           total: { $sum: 1 },
-          won: {
-            $sum: { $cond: [{ $eq: ['$status', 'Won'] }, 1, 0] }
-          },
-          lost: {
-            $sum: { $cond: [{ $eq: ['$status', 'Lost'] }, 1, 0] }
-          }
-        }
-      }
+          won: { $sum: { $cond: [{ $eq: ['$status', 'Won'] }, 1, 0] } },
+          lost: { $sum: { $cond: [{ $eq: ['$status', 'Lost'] }, 1, 0] } },
+        },
+      },
+      {
+        $sort: { '_id.year': 1, '_id.month': 1 },
+      },
     ]);
 
-    // 3. Merge aggregates into the template slots
-    results.forEach((result) => {
-      const match = last6Months.find(
-        (m) => m.year === result._id.year && m.monthNum === result._id.month
+    // Construct reference list of last 6 calendar months to guarantee zero-filled slots are plotted
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const chronologicalMonths = [];
+
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      chronologicalMonths.push({
+        year: d.getFullYear(),
+        month: d.getMonth() + 1, // MongoDB uses 1-based months
+        name: monthNames[d.getMonth()],
+        total: 0,
+        won: 0,
+        lost: 0,
+      });
+    }
+
+    // Map aggregation counts onto our reference list
+    monthlyStats.forEach((stat) => {
+      const match = chronologicalMonths.find(
+        (m) => m.year === stat._id.year && m.month === stat._id.month
       );
       if (match) {
-        match.total = result.total;
-        match.won = result.won;
-        match.lost = result.lost;
+        match.total = stat.total;
+        match.won = stat.won;
+        match.lost = stat.lost || 0;
       }
     });
 
-    // 4. Map to final output payload calculating conversion rates safely
-    const monthlyStatsPayload = last6Months.map((m) => {
-      const conversionRate = m.total > 0
-        ? Number(((m.won / m.total) * 100).toFixed(1))
-        : 0.0;
-        
+    const finalChartData = chronologicalMonths.map((m) => {
+      const total = m.total;
+      const won = m.won;
+      const lost = m.lost;
+      const conversionRate = total > 0 ? parseFloat(((won / total) * 100).toFixed(1)) : 0.0;
       return {
-        month: m.label,
-        total: m.total,
-        won: m.won,
-        lost: m.lost,
-        conversionRate
+        month: `${m.name} ${m.year}`,
+        total,
+        won,
+        lost,
+        conversionRate,
       };
     });
 
-    return successResponse(res, monthlyStatsPayload, 'Monthly statistics calculated successfully.');
+    return successResponse(res, finalChartData, 'Monthly stats retrieved successfully');
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * @desc    Quick autocomplete prefix search returning projected summary data limited to 5 results
+ * @desc    Quick search for autocomplete (React SearchBar debounce)
  * @route   GET /api/leads/search
  * @access  Private
- * 
- * Inputs:
- *   - req.query: { q, limit }
- *   - req.user: Authenticated user object
- * Outputs:
- *   - 200: JSON success payload containing array of matched leads with limited fields
+ * @input   req.query: { q, limit = 5 }
+ * @output  JSON success response containing matching lead documents (limited to 5) with only _id, name, company, email, status
+ * @sideEffect None
  */
-export const getQuickSearch = async (req, res, next) => {
+export const searchLeads = async (req, res, next) => {
   try {
     const { q, limit = 5 } = req.query;
+    if (!q) {
+      return successResponse(res, [], 'Search query is required');
+    }
 
-    const filter = { owner: req.user._id };
-
-    // Apply regex search on name, company, email
-    if (q) {
-      const searchRegex = new RegExp(q, 'i');
-      filter.$or = [
+    const searchRegex = new RegExp(q, 'i');
+    const filter = {
+      owner: req.user._id,
+      $or: [
         { name: searchRegex },
         { company: searchRegex },
-        { email: searchRegex }
-      ];
-    }
+        { email: searchRegex },
+      ],
+    };
 
-    const limitNum = Math.min(Number(limit) || 5, 20); // enforce maximum of 20 results for safety
+    const limitNum = parseInt(limit, 10) || 5;
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[Lead Controller] Autocomplete search query: "${q}", limit: ${limitNum}`);
-    }
-
-    // Retrieve projected fields only
     const leads = await Lead.find(filter)
       .select('_id name company email status')
       .limit(limitNum);
 
-    return successResponse(res, leads, 'Autocomplete results retrieved successfully.');
+    return successResponse(res, leads, 'Search completed successfully');
   } catch (error) {
     next(error);
   }

@@ -6,6 +6,10 @@ import {
   getProfile,
   updateProfile,
   logout,
+  verifyOtp,
+  forgotPassword,
+  resetPassword,
+  resendOtp,
 } from '../controllers/authController.js';
 import { protect } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
@@ -13,79 +17,121 @@ import { validate } from '../middleware/validate.js';
 const router = express.Router();
 
 /**
- * Validation rules for user registration request payload
+ * PRODUCTION NOTE:
+ * You should add `express-rate-limit` middleware to the login and register routes
+ * below in order to safeguard the authentication routes from brute force/DoS attacks.
+ * Example:
+ *   import rateLimit from 'express-rate-limit';
+ *   const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });
+ *   router.post('/register', authLimiter, ...);
  */
+
+// Validation rules for user registration
 const registerValidation = [
   body('name')
-    .trim()
     .notEmpty()
-    .withMessage('Name is required.')
-    .isLength({ min: 2, max: 50 })
-    .withMessage('Name must be between 2 and 50 characters.'),
+    .withMessage('Name is required')
+    .trim()
+    .isLength({ min: 2 })
+    .withMessage('Name must be at least 2 characters long'),
   body('email')
-    .trim()
-    .notEmpty()
-    .withMessage('Email is required.')
     .isEmail()
-    .withMessage('Email must be a valid email address.')
+    .withMessage('Please enter a valid email address')
     .normalizeEmail(),
   body('password')
-    .notEmpty()
-    .withMessage('Password is required.')
     .isLength({ min: 6 })
-    .withMessage('Password must be at least 6 characters long.'),
+    .withMessage('Password must be at least 6 characters long'),
 ];
 
-/**
- * Validation rules for user authentication/login request payload
- */
+// Validation rules for user login
 const loginValidation = [
   body('email')
-    .trim()
-    .notEmpty()
-    .withMessage('Email is required.')
     .isEmail()
-    .withMessage('Email must be a valid email address.')
+    .withMessage('Please enter a valid email address')
     .normalizeEmail(),
   body('password')
     .notEmpty()
-    .withMessage('Password is required.'),
+    .withMessage('Password is required'),
 ];
 
-/**
- * Validation rules for profile update request payload
- */
-const updateProfileValidation = [
-  body('name')
-    .optional()
-    .trim()
-    .isLength({ min: 2, max: 50 })
-    .withMessage('Name must be between 2 and 50 characters.'),
+// Validation rules for OTP verification
+const verifyOtpValidation = [
+  body('email')
+    .isEmail()
+    .withMessage('Please enter a valid email address')
+    .normalizeEmail(),
+  body('otp')
+    .isLength({ min: 6, max: 6 })
+    .withMessage('OTP must be exactly 6 digits')
+    .isNumeric()
+    .withMessage('OTP must be numeric'),
+  body('purpose')
+    .isIn(['register', 'forgot'])
+    .withMessage('Invalid OTP purpose'),
+];
+
+// Validation rules for forgot password
+const forgotPasswordValidation = [
+  body('email')
+    .isEmail()
+    .withMessage('Please enter a valid email address')
+    .normalizeEmail(),
+];
+
+// Validation rules for reset password
+const resetPasswordValidation = [
+  body('email')
+    .isEmail()
+    .withMessage('Please enter a valid email address')
+    .normalizeEmail(),
+  body('otp')
+    .isLength({ min: 6, max: 6 })
+    .withMessage('OTP must be exactly 6 digits')
+    .isNumeric()
+    .withMessage('OTP must be numeric'),
   body('newPassword')
-    .optional()
     .isLength({ min: 6 })
-    .withMessage('New password must be at least 6 characters long.'),
-  body('oldPassword')
-    .optional()
-    .notEmpty()
-    .withMessage('Old password is required to change password.'),
+    .withMessage('New password must be at least 6 characters long'),
 ];
 
-// --- Authentication Route Declarations ---
+// Validation rules for resending OTP
+const resendOtpValidation = [
+  body('email')
+    .isEmail()
+    .withMessage('Please enter a valid email address')
+    .normalizeEmail(),
+  body('purpose')
+    .isIn(['register', 'forgot'])
+    .withMessage('Invalid OTP purpose'),
+];
 
-// Route 1: Register a new user account (Public)
+// 1. POST /api/auth/register - Register a new user
 router.post('/register', validate(registerValidation), register);
 
-// Route 2: Authenticate user credentials and sign JWT (Public)
+// 2. POST /api/auth/login - User login authentication
 router.post('/login', validate(loginValidation), login);
 
-// Route 3: Retrieve current user session profile (Private)
+// 3. GET /api/auth/profile - Retrieve authenticated user's profile details
 router.get('/profile', protect, getProfile);
 
-// Route 4: Update current user profile name and/or password (Private)
-router.put('/profile', protect, validate(updateProfileValidation), updateProfile);
+// 4. PUT /api/auth/profile - Update authenticated user's profile details
+router.put('/profile', protect, updateProfile);
 
-// Route 5: Log out of the current session (Private)
+// 5. POST /api/auth/logout - Logout user and clear session state (invalidated client-side)
 router.post('/logout', protect, logout);
+
+
+
+// 7. POST /api/auth/verify-otp - Verify Email or Forgot Password OTP
+router.post('/verify-otp', validate(verifyOtpValidation), verifyOtp);
+
+// 8. POST /api/auth/forgot-password - Request Forgot Password reset OTP
+router.post('/forgot-password', validate(forgotPasswordValidation), forgotPassword);
+
+// 9. POST /api/auth/reset-password - Verify OTP and Reset User Password
+router.post('/reset-password', validate(resetPasswordValidation), resetPassword);
+
+// 10. POST /api/auth/resend-otp - Resend new OTP respecting limits
+router.post('/resend-otp', validate(resendOtpValidation), resendOtp);
 
 export default router;
