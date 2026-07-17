@@ -33,7 +33,7 @@ const Dashboard = () => {
   
   const pipelineValue = useMemo(() => {
     return leads
-      .filter((l) => l.status !== 'Lost')
+      .filter((l) => l.status !== 'Lost' && l.status !== 'Won')
       .reduce((sum, l) => sum + l.value, 0);
   }, [leads]);
 

@@ -26,7 +26,7 @@ const FunnelChartCard = ({ leads }) => {
       
       if (prevItem && prevItem.value > 0) {
         stageConversion = Math.round((item.value / prevItem.value) * 100);
-        dropOff = 100 - stageConversion;
+        dropOff = Math.max(0, 100 - stageConversion);
       } else if (idx > 0) {
         stageConversion = 0;
         dropOff = 100;
@@ -123,7 +123,11 @@ const FunnelChartCard = ({ leads }) => {
                 {idx > 0 && (
                   <div className="flex items-center justify-between text-[9px] text-slate-450 dark:text-slate-500 font-medium">
                     <span>Conv: {item.stageConversion}% from prev</span>
-                    <span className="text-rose-500 dark:text-rose-400">-{item.dropOff}% drop-off</span>
+                    {item.dropOff > 0 ? (
+                      <span className="text-rose-500 dark:text-rose-400">-{item.dropOff}% drop-off</span>
+                    ) : (
+                      <span className="text-emerald-500 dark:text-emerald-400">✓ No drop-off</span>
+                    )}
                   </div>
                 )}
               </div>

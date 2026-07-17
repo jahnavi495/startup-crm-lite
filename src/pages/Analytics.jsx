@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAnalytics from '../hooks/useAnalytics';
 import AnalyticsFilters from '../components/analytics/AnalyticsFilters';
@@ -54,7 +54,7 @@ const Analytics = () => {
       
       {/* 1. Dashboard Page Header */}
       <div className="flex flex-col gap-1 sm:gap-2">
-        <h2 className="text-xl font-extrabold text-slate-905 dark:text-white sm:text-2xl tracking-tight">
+        <h2 className="text-xl font-extrabold text-slate-900 dark:text-white sm:text-2xl tracking-tight">
           Analytics Dashboard
         </h2>
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">

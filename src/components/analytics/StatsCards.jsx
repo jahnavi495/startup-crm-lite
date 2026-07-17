@@ -178,7 +178,7 @@ const StatsCards = ({ stats, filterRange }) => {
                   }`}>
                     {isPositive ? '+' : ''}
                     {card.trend}
-                    {card.trendType === 'percentage' ? '%' : '%p'}
+                    {card.trendType === 'percentage' ? '%' : 'pp'}
                     {isPositive ? (
                       <ArrowUpRight size={10} className="ml-0.5" />
                     ) : (
