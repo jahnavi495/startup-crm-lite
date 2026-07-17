@@ -12,12 +12,11 @@ import { useAuth } from '../../context/AuthContext';
  * Renders the top header bar. Displays page breadcrumbs, Favorites star,
  * DarkModeToggle, search pill layout, notifications, and logout controls.
  */
-const Navbar = ({ onOpenAddLead, isCollapsed, toggleCollapse }) => {
+const Navbar = ({ onOpenAddLead, toggleCollapse }) => {
   const { logout } = useAuth();
   const location = useLocation();
   const { notifications } = useLeads();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
 
   // Resolve active page titles based on pathnames for breadcrumbs
   const getBreadcrumbs = () => {

@@ -143,6 +143,7 @@ app.use(express.json({ limit: '10kb' }));
 // Body parser middleware: parses URL-encoded data from standard HTML forms
 app.use(express.urlencoded({ extended: true }));
 
+<<<<<<< Updated upstream
 // Root endpoint to confirm the backend service is live
 app.get('/', (req, res) => {
   res.status(200).json({
@@ -150,6 +151,23 @@ app.get('/', (req, res) => {
     message: 'Startup CRM Backend is running',
   });
 });
+=======
+// Workaround for Express 5 compatibility with express-mongo-sanitize (making req.query mutable)
+app.use((req, res, next) => {
+  if (req.query) {
+    Object.defineProperty(req, 'query', {
+      value: { ...req.query },
+      writable: true,
+      configurable: true,
+      enumerable: true,
+    });
+  }
+  next();
+});
+
+// 6. MongoDB Injection Protection: Strips keys prefixed with '$' or containing '.' from requests
+app.use(mongoSanitize());
+>>>>>>> Stashed changes
 
 // Base Health Check endpoint to monitor server uptime and response speed
 app.get('/api/health', (req, res) => {
