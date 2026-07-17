@@ -1,6 +1,14 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Users, BarChart3, LogOut, X, PieChart } from 'lucide-react';
+
+/**
+ * @typedef {Object} SidebarProps
+ * @property {boolean} isOpen - Mobile drawer toggle state
+ * @property {function} toggleSidebar - Mobile drawer close handler
+ * @property {boolean} isCollapsed - Desktop sidebar collapse state
+ */
+
 import { useAuth } from '../../context/AuthContext';
 import Logo from './Logo';
 
@@ -11,7 +19,7 @@ import Logo from './Logo';
  * - Tablet: Collapses to `w-20` showing centered icons only
  * - Desktop: Expands to `w-64` showing icons, labels, and workspace metadata (collapsible to `w-20`)
  */
-const Sidebar = ({ isOpen, toggleSidebar, isCollapsed = false, toggleCollapse }) => {
+const Sidebar = ({ isOpen, toggleSidebar, isCollapsed = false }) => {
   const { user, logout } = useAuth();
 
   const getInitials = (name) => {

@@ -7,9 +7,10 @@ import { errorResponse } from '../utils/apiResponse.js';
  * @param {Error} err - Error object caught by Express
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
+ * @param {Function} _next - Express next middleware function callback
+ * @returns {Object} Express response object containing formatted error payload
  */
-export const errorHandler = (err, req, res, next) => {
+export const errorHandler = (err, req, res, _next) => {
   // Define default values
   let statusCode = err.statusCode || 500;
   let message = err.message || 'Server error';

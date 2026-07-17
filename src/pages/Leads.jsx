@@ -127,7 +127,7 @@ const Leads = () => {
   const handleResetFilters = useCallback(() => {
     setSearchQuery('');
     setActiveFilter('All');
-  }, []);
+  }, [setSearchQuery]);
 
   // State to track leads list refreshing
   const [isRefreshingLeads, setIsRefreshingLeads] = useState(false);

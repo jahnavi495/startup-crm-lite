@@ -53,7 +53,6 @@ const Layout = ({ children }) => {
         isOpen={isSidebarOpen}
         toggleSidebar={toggleSidebar}
         isCollapsed={isCollapsed}
-        toggleCollapse={toggleCollapse}
       />
 
       {/* 2. Main Page Container */}
@@ -63,7 +62,6 @@ const Layout = ({ children }) => {
         {/* Top Header Navigation Toolbar */}
         <Navbar
           onOpenAddLead={openAddLeadModal}
-          isCollapsed={isCollapsed}
           toggleCollapse={toggleCollapse}
         />
 

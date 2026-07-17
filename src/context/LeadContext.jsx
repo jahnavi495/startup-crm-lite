@@ -23,6 +23,7 @@ export const LeadProvider = ({ children }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Dynamically load currency preference and notifications from localStorage when user session changes
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!isAuthenticated || !user) {
       setLeads([]);
@@ -55,6 +56,7 @@ export const LeadProvider = ({ children }) => {
     // Load initial leads from the server API
     fetchLeads();
   }, [user, isAuthenticated]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   /**
    * Helper: Saves notifications to local storage.
